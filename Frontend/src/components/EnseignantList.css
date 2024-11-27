@@ -1,0 +1,120 @@
+/* EnseignantList.css */
+.text-xl {
+  font-weight: bold !important;
+}
+
+.p-inputgroup {
+  margin-top: 0.6rem !important;
+}
+
+/* Pour les inputs */
+.p-inputtext, .p-inputnumber-input {
+  font-weight: bold !important;
+}
+
+/* Pour le texte dans les checkbox */
+.flex.align-items-center .text-lg {
+  font-weight: bold !important;
+}
+
+/* Espacement entre les champs */
+.grid > .col-12 {
+  margin-bottom: 1.5rem !important;
+}
+
+/* Dernier élément sans marge en bas */
+.grid > .col-12:last-child {
+  margin-bottom: 0 !important;
+}
+
+
+.data-table-container {
+  display: flex;
+  justify-content: center; /* Centre horizontalement */
+  align-items: center;    /* Centre verticalement */
+  min-height: calc(100vh - 200px); /* Ajuste la hauteur si nécessaire */
+}
+
+/* Add custom margin and spacing between checkboxes */
+.p-field-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Adds space between the checkbox and label */
+}
+/* Add a bottom margin to each checkbox item */
+.p-field-checkbox.mb-3 {
+  margin-bottom: 15px; /* You can adjust the space as needed */
+}
+/* Custom checkbox styling */
+.custom-checkbox {
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+/* Custom label styling */
+.custom-label {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+  margin-left: 10px;
+  cursor: pointer; /* Makes the label clickable */
+}
+/* Optional: Style the checkbox when checked */
+.p-checkbox.p-highlight .p-checkbox-box {
+  background-color: #36b1e5; /* Change the background color when checked */
+  border-color: #36b1e5; /* Border color when checked */
+}
+/* Optional: Style the label when checkbox is checked */
+.p-checkbox.p-highlight + .custom-label {
+  color: #36b1e5; /* Change the label color when checked */
+}
+/* Add custom margin and spacing between checkboxes */
+.p-field-checkbox {
+  display: flex;
+  align-items: center;
+  margin-top: 16px;
+  gap: 10px; /* Adds space between the checkbox and label */
+}
+/* Add a bottom margin to each checkbox item */
+.p-field-checkbox.mb-3 {
+  margin-bottom: 15px; /* You can adjust the space as needed */
+}
+/* Custom checkbox styling */
+.custom-checkbox {
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+/* Custom label styling */
+.custom-label {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+  margin-left: 10px;
+  cursor: pointer; /* Makes the label clickable */
+}
+/* Optional: Style the checkbox when checked */
+.p-checkbox.p-highlight .p-checkbox-box {
+  background-color: #36b1e5; /* Change the background color when checked */
+  border-color: #36b1e5; /* Border color when checked */
+}
+/* Optional: Style the label when checkbox is checked */
+.p-checkbox.p-highlight + .custom-label {
+  color: #36b1e5; /* Change the label color when checked */
+}
+/* Styling for the footer container */
+.button-footer {
+  display: flex;
+  justify-content: space-between; /* Adjust space between buttons */
+  align-items: center; /* Vertically align buttons */
+  gap: 10px; /* Add space between buttons */
+}
+.p-button-primary {
+  background-color: #007bff; /* Primary button color */
+  color: white;
+  border: 1px solid #007bff;
+  flex: 1; /* Ensure buttons fill available space evenly */
+}
+.p-button-text {
+  background: none;
+  color: #007bff;
+  border: 1px solid #007bff;
+}
