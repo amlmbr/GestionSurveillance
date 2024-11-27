@@ -42,7 +42,7 @@ public class SecurityConfig {
                         .requestMatchers("/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user").permitAll() // Permettre uniquement POST pour /user
                         .requestMatchers(HttpMethod.PUT, "/userupdate").permitAll()
-                        .requestMatchers("/swagger-ui/", "/v3/api-docs/","/email").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**","/email").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilter(jwtAuthenticationFilter)
@@ -68,7 +68,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With")); // En-têtes autorisés
         configuration.setAllowCredentials(true); // Si vous avez besoin de gérer les cookies
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/", configuration); // Appliquer à toutes les URL
+        source.registerCorsConfiguration("/**", configuration); // Appliquer à toutes les URL
         return source;
     }
 }

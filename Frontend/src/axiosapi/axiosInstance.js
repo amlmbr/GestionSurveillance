@@ -2,7 +2,6 @@ import axios from "axios";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:8082", // URL de base de l'API
-  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -53,27 +52,5 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// Exemple de requête POST
-const data = {
-  examenId: 1, // Vérifier que l'ID de l'examen est correctement défini
-  enseignantId: 1, // Vérifier que l'ID de l'enseignant est correctement défini
-  localId: 1, // Vérifier que l'ID du local est correctement défini
-  typeSurveillant: "PRINCIPAL", // Vérifier que le type de surveillant est correctement défini
-};
-
-console.log("Données envoyées à l'API:", data); // Log pour vérifier les données
-
-axiosInstance
-  .post("/api/surveillance/assigner", data)
-  .then((response) => {
-    console.log("Réponse du serveur:", response.data);
-  })
-  .catch((error) => {
-    console.error(
-      "Erreur lors de l'assignation:",
-      error.response ? error.response.data : error.message
-    );
-  });
 
 export default axiosInstance;
