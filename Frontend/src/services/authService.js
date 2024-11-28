@@ -12,19 +12,28 @@ export const login = async (username, password) => {
     throw error;
   }
 };
-export const sendResetCode = async (to, subject, text) => {
+export const sendResetCode = async (to, subject, text, token) => {
   try {
-    const response = await axiosInstance.post("/email", {
-      to,
-      subject,
-      text,
-    });
+    const response = await axiosInstance.post(
+      "/email",
+      {
+        to,
+        subject,
+        text,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Assurez-vous que le token est inclus ici
+        },
+      }
+    );
     return response.data;
   } catch (error) {
-    console.error("Erreur lors de la connexion:", error);
+    console.error("Erreur lors de l'envoi du code de réinitialisation:", error);
     throw error;
   }
 };
+
 export const updatePassword = async (email, password) => {
   try {
     const response = await axiosInstance.put("/userupdate", {

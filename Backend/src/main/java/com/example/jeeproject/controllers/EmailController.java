@@ -14,11 +14,11 @@ public class EmailController {
 
     @PostMapping
     public String sendEmail(@RequestBody EmailRequest emailRequest) {
-    	 emailService.sendEmail(
-                 emailRequest.getTo(),
-                 emailRequest.getSubject(),
-                 emailRequest.getText()
-         );
+        emailService.sendEmail(
+                emailRequest.getTo(),
+                emailRequest.getSubject(),
+                emailRequest.getText()
+        );
         return "Email sent successfully";
     }
 }
