@@ -21,11 +21,7 @@ export const sendResetCode = async (to, subject, text, token) => {
         subject,
         text,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`, // Assurez-vous que le token est inclus ici
-        },
-      }
+      
     );
     return response.data;
   } catch (error) {

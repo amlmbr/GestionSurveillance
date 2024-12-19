@@ -6,6 +6,7 @@ import {
   getDepartements,
 } from "../services/departementService";
 import { getLocaux } from "../services/locauxService";
+import { Checkbox } from 'primereact/checkbox';
 
 // PrimeReact Imports
 import { Calendar } from "primereact/calendar";
@@ -36,6 +37,7 @@ const Loader = () => (
 
 const ExamTable = ({ sessionId }) => {
   const [session, setSession] = useState(null);
+  const [autolocal,setAutoLocal]=useState(false);
   const [horaires, setHoraires] = useState([]);
   const [departements, setDepartements] = useState([]);
   const [enseignants, setEnseignants] = useState([]);
@@ -210,11 +212,13 @@ const ExamTable = ({ sessionId }) => {
           session: { id: session.id },
           date: state.selectedCell.date,
           horaire: state.selectedCell.horaire,
-          nbEtudiants: parseInt(newExam.nbEtudiants),
+          nbEtudiants: parseInt(newExam.nbEtudiants), 
         };
-        await ExamService.createExam(examData);
+        
+        
+        await ExamService.createExam(examData); 
       }
-      closeAddExamDialog();
+      closeAddExamDialog(); 
       await loadCellExams(state.selectedCell.date, state.selectedCell.horaire);
       handleCellClick(state.selectedCell.date, state.selectedCell.horaire);
     } catch (error) {
@@ -256,6 +260,7 @@ const ExamTable = ({ sessionId }) => {
     const examCount = cellExams[`${rowData.date}-${horaire}`] || 0;
 
     return (
+      
       <div
         className="cursor-pointer flex align-items-center justify-content-center gap-2"
         style={{
@@ -611,8 +616,10 @@ const ExamTable = ({ sessionId }) => {
               <InputText
                 type="number"
                 value={newExam.nbEtudiants}
-                onChange={(e) =>
+                onChange={(e) =>{
                   setNewExam({ ...newExam, nbEtudiants: e.target.value })
+                  setAutoLocal(false)
+                }
                 }
                 className="p-inputtext-lg"
                 placeholder="Entrez le nombre d'étudiants"
@@ -620,29 +627,189 @@ const ExamTable = ({ sessionId }) => {
             </div>
           </div>
 
-          <div className="col-12 field">
-            <label className="flex align-items-center gap-3 mb-2">
-              <span className="text-xl font-bold">Locaux</span>
-            </label>
-            <div className="p-inputgroup">
-              <span className="p-inputgroup-addon">
-                <i className="pi pi-building text-primary text-lg" />
-              </span>
-              <MultiSelect
-                value={newExam.locaux}
-                options={locaux}
-                onChange={(e) => setNewExam({ ...newExam, locaux: e.value })}
-                optionLabel="nom"
-                placeholder="Sélectionner un ou plusieurs locaux"
-                className="w-full p-inputtext-lg"
-                display="chip"
-              />
-            </div>
-          </div>
-        </div>
-      </Dialog>
+          <div className="local-selection-container p-4">
+  <div className="header-section mb-4">
+    <h3 className="text-xl font-semibold text-gray-800 mb-3">
+      Locaux
+    </h3>
+    
+    <div className="auto-select-wrapper flex items-center p-3 bg-gray-50 rounded-lg">
+      <div className="custom-checkbox">
+        <Checkbox
+          inputId="autoSelectLocaux"
+          checked={autolocal}
+          onChange={(e) => {
+            if (e.checked) {
+              const locauxAttribues = attribuerLocaux(newExam.nbEtudiants, locaux);
+              setNewExam({ ...newExam, locaux: locauxAttribues.locauxSelectionnes })
+              setAutoLocal(e.checked);
+            } else {
+              setNewExam({ ...newExam, locaux: null })
+              setAutoLocal(e.checked);
+            }
+          }}
+          className="custom-checkbox-input"
+        />
+        <label 
+          htmlFor="autoSelectLocaux" 
+          className="custom-checkbox-label ml-3 text-gray-700 cursor-pointer hover:text-gray-900 transition-colors"
+        >
+          Sélection automatique des locaux
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div className="select-section mt-4">
+    <MultiSelect
+      value={newExam.locaux}
+      options={locaux}
+      onChange={(e) => {
+        setNewExam({ ...newExam, locaux: e.value })
+      }}
+      optionLabel="nom"
+      placeholder="Sélectionner un ou plusieurs locaux"
+      className={`custom-multiselect ${autolocal ? 'disabled' : ''}`}
+      display="chip"
+      disabled={autolocal}
+    />
+  </div>
+</div>
+<style jsx>{`
+  .local-selection-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .custom-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+  }
+
+  .custom-checkbox-input:checked {
+    background-color: #4F46E5;
+    border-color: #4F46E5;
+  }
+
+  .custom-checkbox-input {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .custom-checkbox-label {
+    font-size: 0.95rem;
+    user-select: none;
+  }
+
+  .custom-multiselect {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid #E5E7EB;
+    transition: all 0.2s ease;
+  }
+
+  .custom-multiselect:not(.disabled):hover {
+    border-color: #4F46E5;
+  }
+
+  .custom-multiselect.disabled {
+    background-color: #F3F4F6;
+    opacity: 0.7;
+  }
+
+  .custom-multiselect .p-multiselect-token {
+    background-color: #EEF2FF;
+    color: #4F46E5;
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .auto-select-wrapper {
+    transition: background-color 0.2s ease;
+  }
+
+  .auto-select-wrapper:hover {
+    background-color: #EEF2FF;
+  }
+`}</style>
+  </div>
+</Dialog>
     </div>
   );
 };
+const attribuerLocaux = (nbEtudiants, locaux) => {
+  // Trier les locaux par capacité (du plus petit au plus grand)
+  const locauxTries = [...locaux].sort((a, b) => a.capacite - b.capacite);
+  let meilleureAttribution = null;
+  let meilleurGaspillage = Infinity;
+  
+  // Fonction pour calculer le gaspillage (différence entre capacité utilisée et nécessaire)
+  const calculerGaspillage = (attribution) => {
+      return attribution.reduce((total, attr) => {
+          const local = locauxTries.find(l => l.nom === attr.salle);
+          return total + (local.capacite - attr.nombreEtudiants);
+      }, 0);
+  };
+  
+  // Essayer toutes les combinaisons possibles de salles
+  const essayerCombinaisons = (etudiantsRestants, sallesDisponibles, attributionActuelle) => {
+      // Si on a placé tous les étudiants, vérifier si c'est la meilleure solution
+      if (etudiantsRestants === 0) {
+          const gaspillage = calculerGaspillage(attributionActuelle);
+          if (gaspillage < meilleurGaspillage) {
+              meilleurGaspillage = gaspillage;
+              meilleureAttribution = [...attributionActuelle];
+          }
+          return;
+      }
+      
+      // Essayer chaque salle disponible
+      for (let i = 0; i < sallesDisponibles.length && etudiantsRestants > 0; i++) {
+          const salle = sallesDisponibles[i];
+          if (salle.capacite >= etudiantsRestants) {
+              // On peut mettre tous les étudiants restants dans cette salle
+              essayerCombinaisons(0, 
+                  sallesDisponibles.slice(i + 1),
+                  [...attributionActuelle, {salle: salle.nom, nombreEtudiants: etudiantsRestants}]);
+          } else {
+              // Utiliser la salle au maximum de sa capacité
+              essayerCombinaisons(etudiantsRestants - salle.capacite,
+                  sallesDisponibles.slice(i + 1),
+                  [...attributionActuelle, {salle: salle.nom, nombreEtudiants: salle.capacite}]);
+          }
+      }
+  };
+  
+  // Commencer la recherche de solutions
+  essayerCombinaisons(nbEtudiants, locauxTries, []);
+  
+  // Format de retour simplifié
+  if (!meilleureAttribution) {
+      return {
+          reussi: false,
+          locauxSelectionnes: []
+      };
+  }
+  
+  // Transformer l'attribution en liste de locaux avec leurs détails
+  const locauxSelectionnes = meilleureAttribution.map(attr => {
+      const localOriginal = locaux.find(l => l.nom === attr.salle);
+      return {
+          ...localOriginal,
+          nombreEtudiants: attr.nombreEtudiants
+      };
+  });
+
+  return {
+      reussi: true,
+      locauxSelectionnes
+  };
+};
+
+
 
 export default ExamTable;
