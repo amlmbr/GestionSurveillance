@@ -526,6 +526,15 @@ const ExamTable = ({ sessionId }) => {
                     </div>
                   )}
                />
+               <Column
+                  header="Option"
+                  body={(rowData) => (
+                    <div className="flex align-items-center">
+                      <i className="pi pi-book mr-2"></i>
+                      <span>{rowData.option?.nom || 'Non défini'}</span> {/* Changé de rowData.module à rowData.moduleExamen */}
+                    </div>
+                  )}
+               />
               <Column
                 header="Enseignant Responsable"
                 body={(rowData) => (
