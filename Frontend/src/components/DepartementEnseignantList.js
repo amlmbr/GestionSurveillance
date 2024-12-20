@@ -113,6 +113,22 @@ const DepartementEnseignantList = () => {
     }
   };
 
+  const isFormValid = () => {
+    if (modalMode === 'add') {
+      return !!(
+        currentEnseignant.nom &&
+        currentEnseignant.prenom &&
+        currentEnseignant.email
+      );
+    }
+    return !!(
+      currentEnseignant.id &&
+      currentEnseignant.nom &&
+      currentEnseignant.prenom &&
+      currentEnseignant.email
+    );
+  };
+
   const handleDelete = (id) => {
     deleteEnseignant(id)
       .then(() => {
@@ -212,6 +228,7 @@ const DepartementEnseignantList = () => {
         label={modalMode === 'add' ? 'Ajouter' : 'Modifier'}
         icon="pi pi-check"
         onClick={handleSubmit}
+        disabled={!isFormValid()}
         autoFocus
       />
     </div>

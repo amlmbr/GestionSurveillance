@@ -98,6 +98,22 @@ const EnseignantList = () => {
     }
   };
 
+  const isFormValid = () => {
+    if (modalMode === 'add') {
+      return !!(
+        currentEnseignant.nom &&
+        currentEnseignant.prenom &&
+        currentEnseignant.email
+      );
+    }
+    return !!(
+      currentEnseignant.id &&
+      currentEnseignant.nom &&
+      currentEnseignant.prenom &&
+      currentEnseignant.email
+    );
+  };
+
   const handleDelete = (id) => {
     deleteEnseignant(id)
       .then(() => {
@@ -182,9 +198,10 @@ const EnseignantList = () => {
         className="p-button-text"
       />
       <Button
-        label={modalMode === "add" ? "Ajouter" : "Modifier"}
+        label={modalMode === 'add' ? 'Ajouter' : 'Modifier'}
         icon="pi pi-check"
         onClick={handleSubmit}
+        disabled={!isFormValid()}
         autoFocus
       />
     </div>

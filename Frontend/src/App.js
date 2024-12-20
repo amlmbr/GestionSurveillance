@@ -10,6 +10,8 @@ import LoginComp from "../src/loginui/loginComponet";
 import BonjourPage from "../src/homeui/BonjourPage";
 import EnseignantList from "../src/components/EnseignantList";
 import LocalList from "../src/components/LocalList";
+import ModuleList from '../src/components/ModuleList';
+import OptionList from '../src/components/OptionList';
 import DepartementList from "./components/DepartementList";
 import DepartementEnseignantList from "./components/DepartementEnseignantList";
 import SessionDetails from "../src/pages/SessionDetails";
@@ -49,39 +51,49 @@ function LayoutWithSidebar({ children }) {
 
   const navigationItems = [
     {
-      path: sessionId ? `/session/${sessionId}` : "/bonjour",
-      label: "Tableau de bord",
-      icon: "pi pi-home",
+      path: sessionId ? `/session/${sessionId}` : '/bonjour',
+      label: 'Tableau de bord',
+      icon: 'pi pi-home',
     },
     {
-      path: "/local",
-      label: "Gestion des Locaux",
-      icon: "pi pi-building",
+      path: '/local',
+      label: 'Gestion des Locaux',
+      icon: 'pi pi-building',
     },
     {
-      path: "/departements",
-      label: "Gestion des Départements",
-      icon: "pi pi-sitemap",
+      path: '/departements',
+      label: 'Gestion des Départements',
+      icon: 'pi pi-sitemap',
     },
     {
-      path: "/enseignant",
-      label: "Gestion des Enseignants",
-      icon: "pi pi-users",
+      path: '/enseignant',
+      label: 'Gestion des Enseignants',
+      icon: 'pi pi-users',
     },
     {
-      path: "/exam",
-      label: "Examens",
-      icon: "pi pi-copy",
+      path: '/module',
+      label: 'Modules',
+      icon: 'pi pi-book',
+    },
+     {
+      path: '/option',
+      label: 'Options',
+      icon: 'pi pi-book',
     },
     {
-      path: "/surveillance",
-      label: "Surveillance des Examens",
-      icon: "pi pi-eye",
+      path: '/exam',
+      label: 'Examens',
+      icon: 'pi pi-copy',
     },
     {
-      path: "/bonjour",
-      label: "Sessions",
-      icon: "pi pi-calendar",
+      path: '/surveillance',
+      label: 'Surveillance des Examens',
+      icon: 'pi pi-eye',
+    },
+    {
+      path: '/bonjour',
+      label: 'Sessions',
+      icon: 'pi pi-calendar',
     },
   ];
 
@@ -319,6 +331,8 @@ function AppContent() {
             <Route path="/session/:id" element={<SessionDetails />} />
             <Route path="/enseignant" element={<EnseignantList />} />
             <Route path="/local" element={<LocalList />} />
+            <Route path="/module" element={<ModuleList />} />
+            <Route path="/option" element={<OptionList />} />
             <Route path="/departements" element={<DepartementList />} />
             <Route
               path="/departements/:departementId/enseignants"

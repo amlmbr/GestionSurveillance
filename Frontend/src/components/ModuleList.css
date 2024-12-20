@@ -1,0 +1,26 @@
+/* LocalList.css */
+.text-xl {
+  font-weight: bold !important;
+}
+
+.p-inputgroup {
+  margin-top: 0.6rem !important;
+}
+
+/* Pour les inputs */
+.p-inputtext, .p-inputnumber-input, .p-dropdown-label {
+  font-weight: bold !important;
+}
+
+/* Pour être sûr que le texte dans le dropdown est en gras */
+.p-dropdown-item {
+  font-weight: bold !important;
+}
+
+
+.data-table-container {
+  display: flex;
+  justify-content: center; /* Centre horizontalement */
+  align-items: center;    /* Centre verticalement */
+  min-height: calc(100vh - 200px); /* Ajuste la hauteur si nécessaire */
+}

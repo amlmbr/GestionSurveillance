@@ -129,6 +129,13 @@ const DepartementList = () => {
       .catch((error) => console.error("Error deleting departement:", error));
   };
 
+  const isFormValid = () => {
+    if (modalMode === 'add') {
+      return !!currentDepartement.nom;
+    }
+    return !!(currentDepartement.id && currentDepartement.nom);
+  };
+
   const goToEnseignants = (departementId) => {
     navigate(`/departements/${departementId}/enseignants`);
   };
@@ -228,9 +235,10 @@ const DepartementList = () => {
         className="p-button-text"
       />
       <Button
-        label={modalMode === "add" ? "Ajouter" : "Modifier"}
+        label={modalMode === 'add' ? 'Ajouter' : 'Modifier'}
         icon="pi pi-check"
         onClick={handleSubmit}
+        disabled={!isFormValid()}
         autoFocus
       />
     </div>
