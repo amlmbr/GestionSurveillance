@@ -10,6 +10,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getDepartementById } from '../services/departementService';
 import { addEnseignant ,getEnseignantsByDepartement } from '../services/departementService';
 import {  updateEnseignant, deleteEnseignant } from '../services/enseignantService';
+import { getEnseignants } from '../services/enseignantsService';
 import './EnseignantList.css';
 
 const DepartementEnseignantList = () => {
@@ -17,10 +18,13 @@ const DepartementEnseignantList = () => {
   const navigate = useNavigate();
   const [departement, setDepartement] = useState(null);
   const [enseignants, setEnseignants] = useState([]);
+  const [Allenseignants,setAllEnseignants] = useState([]);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [modalMode, setModalMode] = useState('add');
+    const [selectedEnseignants, setSelectedEnseignants] = useState([]);
+    
   const [currentEnseignant, setCurrentEnseignant] = useState({
     nom: '',
     prenom: '',
@@ -33,7 +37,22 @@ const DepartementEnseignantList = () => {
   useEffect(() => {
     loadDepartement();
     loadEnseignants();
+    loadAllEnseignants();
   }, [departementId]);
+
+
+  const handleCheckboxChange = (e, enseignant) => {
+    let newSelectedEnseignants;
+    if (e.checked) {
+      newSelectedEnseignants = [...selectedEnseignants, enseignant];
+    } else {
+      newSelectedEnseignants = selectedEnseignants.filter(
+        (selected) => selected.id !== enseignant.id
+      );
+    }
+    setSelectedEnseignants(newSelectedEnseignants);
+  };
+
 
   const loadDepartement = () => {
     getDepartementById(departementId)
@@ -55,6 +74,20 @@ const DepartementEnseignantList = () => {
       .catch((error) => console.error('Error fetching enseignants:', error))
       .finally(() => setLoading(false));
   };
+
+  const loadAllEnseignants  = () => {
+        setLoading(true);
+         getEnseignants()
+           .then((response) => {
+             setAllEnseignants(response);
+             console.log('All Enseignants: ', response); // Log the AllEnseignants list here
+           })
+           .catch((error) =>
+             console.error('Error fetching enseignants:', error)
+           )
+           .finally(() => setLoading(false));
+
+  }
 
   const handleOpenModal = (mode, enseignant = null) => {
     setModalMode(mode);
@@ -84,35 +117,43 @@ const DepartementEnseignantList = () => {
   };
 
   const handleSubmit = () => {
-    if (
-      !currentEnseignant.nom ||
-      !currentEnseignant.prenom ||
-      !currentEnseignant.email
-    ) {
-      console.error('Informations manquantes');
-      return;
-    }
-
-    if (modalMode === 'add') {
-      addEnseignant(currentEnseignant, departementId)
+  // Vérifier si selectedEnseignants contient au moins un enseignant
+  if (selectedEnseignants.length >= 1) {
+    // Boucle à travers la liste selectedEnseignants et ajouter chaque enseignant
+    selectedEnseignants.forEach((enseignant) => {
+      addEnseignant(enseignant, departementId)
         .then(() => {
-          loadEnseignants();
-          handleCloseModal();
+          loadEnseignants(); // Recharge les enseignants après chaque ajout
         })
         .catch((error) => console.error('Error adding enseignant:', error));
-    } else {
-      updateEnseignant(currentEnseignant.id, {
-        ...currentEnseignant,
-        departement: { id: departementId },
+    });
+    // Fermer la modal après avoir ajouté tous les enseignants
+    handleCloseModal();
+  } else {
+    console.log('Aucun enseignant sélectionné');
+  }
+  // Si modalMode est 'add', on ajoute l'enseignant actuel
+  if (modalMode === 'add' && !selectedEnseignants.length) {
+    addEnseignant(currentEnseignant, departementId)
+      .then(() => {
+        loadEnseignants();
+        handleCloseModal();
       })
-        .then(() => {
-          loadEnseignants();
-          handleCloseModal();
-        })
-        .catch((error) => console.error('Error updating enseignant:', error));
-    }
-  };
-
+      .catch((error) => console.error('Error adding enseignant:', error));
+  } else {
+    // Sinon, on met à jour l'enseignant existant
+    updateEnseignant(currentEnseignant.id, {
+      ...currentEnseignant,
+      departement: { id: departementId },
+    })
+      .then(() => {
+        loadEnseignants();
+        handleCloseModal();
+      })
+      .catch((error) => console.error('Error updating enseignant:', error));
+  }
+};
+  
   const isFormValid = () => {
     if (modalMode === 'add') {
       return !!(
@@ -128,7 +169,6 @@ const DepartementEnseignantList = () => {
       currentEnseignant.email
     );
   };
-
   const handleDelete = (id) => {
     deleteEnseignant(id)
       .then(() => {
@@ -217,7 +257,7 @@ const DepartementEnseignantList = () => {
   };
 
   const footer = (
-    <div>
+    <div className="button-footer">
       <Button
         label="Annuler"
         icon="pi pi-times"
@@ -230,240 +270,149 @@ const DepartementEnseignantList = () => {
         onClick={handleSubmit}
         disabled={!isFormValid()}
         autoFocus
+        className="p-button-primary" // Primary button style for "Ajouter" or "Modifier"
+      />
+      <Button
+        label="Ajouter un autre Enseignant"
+        icon="pi pi-plus"
+        onClick={() => navigate('/enseignant')} // Redirect to /enseignant page
+        className="p-button-primary" // Same style as the second button
       />
     </div>
   );
 
   return (
-    <div style={{
-      backgroundImage: 'url(/ensajbg.png)', 
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
-      minHeight: '100vh',
-      position: 'relative',
-    }}>
-    <div className="data-table-container">
-    <div style={{ width: '80%' }}> 
-        
-      <DataTable
-        value={enseignants}
-        paginator
-        rows={5}
-        dataKey="id"
-        loading={loading}
-        globalFilter={globalFilterValue}
-        header={renderHeader()}
-        emptyMessage="Aucun enseignant trouvé dans ce département."
-        rowsPerPageOptions={[5, 10, 25]}
-        removableSort
-        showGridlines
-        stripedRows
-        sortMode="multiple"
-        globalFilterFields={['id', 'nom', 'prenom', 'email']}
-      >
-        <Column field="id" header="ID" sortable style={{ minWidth: '5rem' }} />
-        <Column
-          field="nom"
-          header="Nom"
-          sortable
-          style={{ minWidth: '10rem' }}
-        />
-        <Column
-          field="prenom"
-          header="Prénom"
-          sortable
-          style={{ minWidth: '10rem' }}
-        />
-        <Column
-          field="email"
-          header="Email"
-          sortable
-          style={{ minWidth: '15rem' }}
-        />
-        <Column
-          field="estDispense"
-          header="Dispense"
-          sortable
-          style={{ minWidth: '8rem' }}
-          body={(rowData) => booleanBodyTemplate(rowData, 'estDispense')}
-        />
-        <Column
-          field="nbSurveillances"
-          header="Nb Surveillances"
-          sortable
-          style={{ minWidth: '10rem' }}
-        />
-        <Column
-          field="estReserviste"
-          header="Reserviste"
-          sortable
-          style={{ minWidth: '8rem' }}
-          body={(rowData) => booleanBodyTemplate(rowData, 'estReserviste')}
-        />
-        <Column
-          body={actionBodyTemplate}
-          header="Actions"
-          style={{ minWidth: '10rem', textAlign: 'center' }}
-        />
-      </DataTable>
-      </div>
-      <Dialog
-        visible={openModal}
-        style={{ width: '550px' }}
-        header={
-          <div className="flex align-items-center gap-3">
-            <i className="pi pi-user text-primary text-3xl" />
-            <span className="text-2xl font-bold">
-              {modalMode === 'add'
-                ? 'Ajouter un enseignant'
-                : "Modifier l'enseignant"}
-            </span>
-          </div>
-        }
-        modal
-        className="p-fluid"
-        footer={footer}
-        onHide={handleCloseModal}
-      >
-        <div className="grid p-4">
-          {/* Nom */}
-          <div className="col-12 mb-8">
-            <label className="flex align-items-center gap-3 mb-4">
-              <span className="text-xl font-bold">Nom</span>
-            </label>
-            <div className="p-inputgroup">
-              <span className="p-inputgroup-addon">
-                <i className="pi pi-user text-primary text-lg" />
-              </span>
-              <InputText
-                value={currentEnseignant.nom}
-                onChange={(e) =>
-                  setCurrentEnseignant({
-                    ...currentEnseignant,
-                    nom: e.target.value,
-                  })
-                }
-                className="p-inputtext-lg"
-              />
-            </div>
-          </div>
-
-          {/* Prénom */}
-          <div className="col-12 mb-8">
-            <label className="flex align-items-center gap-3 mb-4">
-              <span className="text-xl font-bold">Prénom</span>
-            </label>
-            <div className="p-inputgroup">
-              <span className="p-inputgroup-addon">
-                <i className="pi pi-user text-primary text-lg" />
-              </span>
-              <InputText
-                value={currentEnseignant.prenom}
-                onChange={(e) =>
-                  setCurrentEnseignant({
-                    ...currentEnseignant,
-                    prenom: e.target.value,
-                  })
-                }
-                className="p-inputtext-lg"
-              />
-            </div>
-          </div>
-
-          {/* Email */}
-          <div className="col-12 mb-8">
-            <label className="flex align-items-center gap-3 mb-4">
-              <span className="text-xl font-bold">Email</span>
-            </label>
-            <div className="p-inputgroup">
-              <span className="p-inputgroup-addon">
-                <i className="pi pi-envelope text-primary text-lg" />
-              </span>
-              <InputText
-                value={currentEnseignant.email}
-                onChange={(e) =>
-                  setCurrentEnseignant({
-                    ...currentEnseignant,
-                    email: e.target.value,
-                  })
-                }
-                className="p-inputtext-lg"
-              />
-            </div>
-          </div>
-
-          {/* Nb Surveillances */}
-          <div className="col-12 mb-8">
-            <label className="flex align-items-center gap-3 mb-4">
-              <span className="text-xl font-bold">Nb Surveillances</span>
-            </label>
-            <div className="p-inputgroup">
-              <span className="p-inputgroup-addon">
-                <i className="pi pi-users text-primary text-lg" />
-              </span>
-              <InputNumber
-                value={currentEnseignant.nbSurveillances}
-                onValueChange={(e) =>
-                  setCurrentEnseignant({
-                    ...currentEnseignant,
-                    nbSurveillances: e.value,
-                  })
-                }
-                showButtons
-                min={0}
-                className="p-inputnumber-lg"
-              />
-            </div>
-          </div>
-
-          {/* Options en ligne */}
-          <div className="flex gap-4">
-            {/* Est dispensé */}
-            <div className="col-6">
-              <label className="flex align-items-center gap-3 mb-4">
-                <span className="text-xl font-bold">Dispensé</span>
-              </label>
-              <div className="flex align-items-center gap-3 p-3 border-1 border-round">
-                <Checkbox
-                  checked={currentEnseignant.estDispense}
-                  onChange={(e) =>
-                    setCurrentEnseignant({
-                      ...currentEnseignant,
-                      estDispense: e.checked,
-                    })
-                  }
-                />
-                <span className="text-lg">
-                  {currentEnseignant.estDispense ? 'Oui' : 'Non'}
-                </span>
-              </div>
-            </div>
-
-            {/* Est réserviste */}
-            <div className="col-6">
-              <label className="flex align-items-center gap-3 mb-4">
-                <span className="text-xl font-bold">Réserviste</span>
-              </label>
-              <div className="flex align-items-center gap-3 p-3 border-1 border-round">
-                <Checkbox
-                  checked={currentEnseignant.estReserviste}
-                  onChange={(e) =>
-                    setCurrentEnseignant({
-                      ...currentEnseignant,
-                      estReserviste: e.checked,
-                    })
-                  }
-                />
-                <span className="text-lg">
-                  {currentEnseignant.estReserviste ? 'Oui' : 'Non'}
-                </span>
-              </div>
-            </div>
-          </div>
+    <div
+      style={{
+        backgroundImage: 'url(/ensajbg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        minHeight: '100vh',
+        position: 'relative',
+      }}
+    >
+      <div className="data-table-container">
+        <div style={{ width: '80%' }}>
+          <DataTable
+            value={enseignants}
+            paginator
+            rows={5}
+            dataKey="id"
+            loading={loading}
+            globalFilter={globalFilterValue}
+            header={renderHeader()}
+            emptyMessage="Aucun enseignant trouvé dans ce département."
+            rowsPerPageOptions={[5, 10, 25]}
+            removableSort
+            showGridlines
+            stripedRows
+            sortMode="multiple"
+            globalFilterFields={['id', 'nom', 'prenom', 'email']}
+          >
+            <Column
+              field="id"
+              header="ID"
+              sortable
+              style={{ minWidth: '5rem' }}
+            />
+            <Column
+              field="nom"
+              header="Nom"
+              sortable
+              style={{ minWidth: '10rem' }}
+            />
+            <Column
+              field="prenom"
+              header="Prénom"
+              sortable
+              style={{ minWidth: '10rem' }}
+            />
+            <Column
+              field="email"
+              header="Email"
+              sortable
+              style={{ minWidth: '15rem' }}
+            />
+            <Column
+              field="estDispense"
+              header="Dispense"
+              sortable
+              style={{ minWidth: '8rem' }}
+              body={(rowData) => booleanBodyTemplate(rowData, 'estDispense')}
+            />
+            <Column
+              field="nbSurveillances"
+              header="Nb Surveillances"
+              sortable
+              style={{ minWidth: '10rem' }}
+            />
+            <Column
+              field="estReserviste"
+              header="Reserviste"
+              sortable
+              style={{ minWidth: '8rem' }}
+              body={(rowData) => booleanBodyTemplate(rowData, 'estReserviste')}
+            />
+            <Column
+              body={actionBodyTemplate}
+              header="Actions"
+              style={{ minWidth: '10rem', textAlign: 'center' }}
+            />
+          </DataTable>
         </div>
-      </Dialog>
-    </div></div>
+        <Dialog
+          visible={openModal}
+          style={{ width: '550px' }}
+          header={
+            <div className="flex align-items-center gap-3">
+              <i className="pi pi-user text-primary text-3xl" />
+              <span className="text-2xl font-bold">
+                {modalMode === 'add'
+                  ? 'Ajouter un enseignant'
+                  : "Modifier l'enseignant"}
+              </span>
+            </div>
+          }
+          modal
+          className="p-fluid"
+          footer={footer}
+          onHide={handleCloseModal}
+        >
+          <div className="grid p-4">
+            {/* Other fields (Nom, Prénom, Email) */}
+
+            {/* Add Checkboxes for Selecting Enseignants */}
+            <div className="col-12 mb-8">
+              <label className="flex align-items-center gap-3 mb-4">
+                <span className="text-xl font-bold">
+                  Sélectionner les Enseignants
+                </span>
+              </label>
+              {Allenseignants.map((enseignant) => (
+                <div key={enseignant.id} className="p-field-checkbox mb-3">
+                  {' '}
+                  {/* Add margin-bottom here */}
+                  <Checkbox
+                    inputId={`enseignant-${enseignant.id}`}
+                    value={enseignant.id}
+                    onChange={(e) => handleCheckboxChange(e, enseignant)}
+                    checked={selectedEnseignants.includes(enseignant)}
+                    className="custom-checkbox"
+                  />
+                  <label
+                    htmlFor={`enseignant-${enseignant.id}`}
+                    className="custom-label"
+                  >
+                    {enseignant.nom} {enseignant.prenom}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Dialog>
+      </div>
+    </div>
   );
 };
 

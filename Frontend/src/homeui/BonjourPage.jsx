@@ -13,6 +13,16 @@ import { useSession } from '../contexte/SessionContext';
 import './BonjourPage.css'; // Import du fichier CSS
 
 const BonjourPage = () => {
+  const url = new URL(window.location.href);
+
+// Utiliser URLSearchParams pour extraire les paramètres de l'URL
+const params = new URLSearchParams(url.search);
+
+// Récupérer la valeur du paramètre 'access_token'
+const accessToken = params.get('access_token');
+
+if("acces ",accessToken)
+  localStorage.setItem('access_token', accessToken);
   const navigate = useNavigate(); // Hook pour la navigation
   const { setSessionId } = useSession();
   useEffect(() => {
