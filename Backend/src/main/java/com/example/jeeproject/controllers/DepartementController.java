@@ -1,8 +1,7 @@
 package com.example.jeeproject.controllers;
 
-import com.example.jeeproject.entity.Departement;
-import com.example.jeeproject.entity.Enseignant;
-import com.example.jeeproject.services.DepartementService;
+import com.example.jeeproject.entity.*;
+import com.example.jeeproject.services.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -69,4 +68,10 @@ public class DepartementController {
     }
 
 
+    @GetMapping("/{id}/options")
+    public ResponseEntity<List<Option>> getOptionsByDepartementId(@PathVariable Long id) {
+        List<Option> options = departementService.getOptionsByDepartementId(id);
+        return ResponseEntity.ok(options);
+    }
+    
 }

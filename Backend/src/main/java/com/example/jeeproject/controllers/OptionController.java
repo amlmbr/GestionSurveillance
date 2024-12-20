@@ -1,6 +1,7 @@
 package com.example.jeeproject.controllers;
 
 import com.example.jeeproject.dto.OptionDTO;
+import com.example.jeeproject.entity.Module;
 import com.example.jeeproject.entity.Option;
 import com.example.jeeproject.services.OptionService;
 import jakarta.validation.Valid;
@@ -68,5 +69,11 @@ public class OptionController {
             dto.setDepartementNom(option.getDepartement().getNom());
         }
         return dto;
+    }
+
+    @GetMapping("/{id}/modules")
+    public ResponseEntity<List<Module>> getModulesByOptionId(@PathVariable Long id) {
+        List<Module> modules = optionService.getModulesByOptionId(id);
+        return ResponseEntity.ok(modules);
     }
 }

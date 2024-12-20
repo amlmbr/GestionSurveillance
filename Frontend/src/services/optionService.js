@@ -82,3 +82,18 @@ export const deleteOption = async (id) => {
     throw error; // Relance l'erreur
   }
 };
+
+// Récupérer toutes les options d'un département
+export const getModulesByOptionId = async (optionId) => {
+  try {
+    const url = `/options/${optionId}/modules`;
+    console.log('Calling URL:', url); // Log l'URL complète
+    const response = await axiosInstance.get(url);
+    console.log('Raw API Response:', response); // Log la réponse complète
+    console.log('Modules data:', response.data); // Log les données
+    return response.data;
+  } catch (error) {
+    console.error('Full error:', error); // Log l'erreur complète
+    throw error;
+  }
+};

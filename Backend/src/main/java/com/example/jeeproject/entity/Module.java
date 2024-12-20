@@ -34,4 +34,6 @@ public class Module {
     //@JsonManagedReference("module-option")
     @JsonBackReference("module-option")  // Changé en JsonBackReference
     private Option option;
+    
+    
 }

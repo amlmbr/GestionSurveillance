@@ -1,7 +1,7 @@
 package com.example.jeeproject.services;
 
-import com.example.jeeproject.entity.Departement;
-import com.example.jeeproject.entity.Option;
+import com.example.jeeproject.entity.*;
+import com.example.jeeproject.entity.Module;
 import com.example.jeeproject.repo.DepartementRepository;
 import com.example.jeeproject.repo.OptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,4 +87,23 @@ public class OptionService {
     public void deleteOption(Long id) {
         optionRepository.deleteById(id);
     }
+    
+    
+    public List<Module> getModulesByOptionId(Long optionId) {
+        System.out.println("Fetching modules for option ID: " + optionId);
+        Option option = optionRepository.findById(optionId)
+            .orElseThrow(() -> {
+                System.out.println("Option not found with ID: " + optionId);
+                return new RuntimeException("Option non trouvée avec l'id: " + optionId);
+            });
+        
+        List<Module> modules = option.getModules();
+        System.out.println("Found " + modules.size() + " modules");
+        modules.forEach(module -> System.out.println("Module: " + module.getNom()));
+        
+        return modules;
+    }
+    
+    
+    
 }
