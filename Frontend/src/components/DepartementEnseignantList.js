@@ -132,7 +132,6 @@ const DepartementEnseignantList = () => {
   } else {
     console.log('Aucun enseignant sélectionné');
   }
-
   // Si modalMode est 'add', on ajoute l'enseignant actuel
   if (modalMode === 'add' && !selectedEnseignants.length) {
     addEnseignant(currentEnseignant, departementId)
@@ -155,6 +154,21 @@ const DepartementEnseignantList = () => {
   }
 };
   
+  const isFormValid = () => {
+    if (modalMode === 'add') {
+      return !!(
+        currentEnseignant.nom &&
+        currentEnseignant.prenom &&
+        currentEnseignant.email
+      );
+    }
+    return !!(
+      currentEnseignant.id &&
+      currentEnseignant.nom &&
+      currentEnseignant.prenom &&
+      currentEnseignant.email
+    );
+  };
   const handleDelete = (id) => {
     deleteEnseignant(id)
       .then(() => {
@@ -254,6 +268,7 @@ const DepartementEnseignantList = () => {
         label={modalMode === 'add' ? 'Ajouter' : 'Modifier'}
         icon="pi pi-check"
         onClick={handleSubmit}
+        disabled={!isFormValid()}
         autoFocus
         className="p-button-primary" // Primary button style for "Ajouter" or "Modifier"
       />

@@ -23,30 +23,12 @@ public class Departement {
     private String nom;
 
     @OneToMany(mappedBy = "departement", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private List<Enseignant> enseignants = new ArrayList<>();
+    //@JsonManagedReference
+	@JsonManagedReference("enseignant-departement")  // Ajout du nom de référence
+	private List<Enseignant> enseignants = new ArrayList<>();
 
-	public Long getId() {
-		return id;
-	}
+	@OneToMany(mappedBy = "departement", cascade = CascadeType.ALL)
+	@JsonManagedReference("departement-option") // Gère la relation avec les options
+	private List<Option> options = new ArrayList<>(); // Un département peut avoir plusieurs options
 
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getNom() {
-		return nom;
-	}
-
-	public void setNom(String nom) {
-		this.nom = nom;
-	}
-
-	public List<Enseignant> getEnseignants() {
-		return enseignants;
-	}
-
-	public void setEnseignants(List<Enseignant> enseignants) {
-		this.enseignants = enseignants;
-	}
 }

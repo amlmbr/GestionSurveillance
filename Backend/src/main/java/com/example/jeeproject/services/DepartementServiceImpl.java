@@ -1,9 +1,7 @@
 package com.example.jeeproject.services;
 
-import com.example.jeeproject.entity.Departement;
-import com.example.jeeproject.entity.Enseignant;
-import com.example.jeeproject.repo.DepartementRepository;
-import com.example.jeeproject.repo.EnseignantRepository;
+import com.example.jeeproject.entity.*;
+import com.example.jeeproject.repo.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -67,8 +65,15 @@ public class DepartementServiceImpl implements DepartementService {
         Departement departement = getDepartementById(departementId);
         return departement.getEnseignants();
     }
+    
+    @Override
+    public List<Option> getOptionsByDepartementId(Long departementId) {
+        Departement departement = getDepartementById(departementId);
+        return departement.getOptions();
+    }
 
-    // Nouvelle méthode implémentée
+
+
     @Override
     public Enseignant addEnseignantToDepartement(Long departementId, Enseignant enseignant) {
         Departement departement = getDepartementById(departementId);

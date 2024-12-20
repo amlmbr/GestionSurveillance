@@ -4,10 +4,11 @@ import SessionService from "../services/SessionService";
 import {
   getEnseignantsByDepartement,
   getDepartements,
+  getOptionsByDepartement,
 } from "../services/departementService";
+import {getModulesByOptionId} from "../services/optionService"
 import { getLocaux } from "../services/locauxService";
 import { Checkbox } from 'primereact/checkbox';
-
 // PrimeReact Imports
 import { Calendar } from "primereact/calendar";
 import { Dialog } from "primereact/dialog";
@@ -41,6 +42,11 @@ const ExamTable = ({ sessionId }) => {
   const [horaires, setHoraires] = useState([]);
   const [departements, setDepartements] = useState([]);
   const [enseignants, setEnseignants] = useState([]);
+  const [options, setOptions] = useState([]);
+  const [modules, setModules] = useState([]);
+  const [moduleLoading, setModuleLoading] = useState(false);
+
+ // const [modules, setModules] = useState([]);
   const [locaux, setLocaux] = useState([]);
   const [cellExams, setCellExams] = useState({}); // Pour stocker le nombre d'examens par cellule
   const [state, setState] = useState({
@@ -54,11 +60,12 @@ const ExamTable = ({ sessionId }) => {
   const [rows, setRows] = useState(5);
   const [editingExam, setEditingExam] = useState(null);
   const [newExam, setNewExam] = useState({
-    module: "",
+    module: null,
     enseignant: null,
     nbEtudiants: "",
     locaux: [],
     departement: null,
+    option: null,
   });
   const setLoadingCell = (cell) =>
     setState((prev) => ({ ...prev, loadingCell: cell }));
@@ -138,6 +145,52 @@ const ExamTable = ({ sessionId }) => {
     }
   }, [newExam.departement]);
 
+  useEffect(() => {
+    if (newExam.departement) {
+      const fetchOptions = async () => {
+        try {
+          const optionsData = await getOptionsByDepartement(newExam.departement.id);
+          setOptions(optionsData);
+        } catch (error) {
+          console.error("Erreur lors du chargement des options :", error);
+        }
+      };
+      fetchOptions();
+    } else {
+      setOptions([]);
+    }
+  }, [newExam.departement]);
+  
+  
+  useEffect(() => {
+    const fetchModules = async () => {
+      if (!newExam.option) {
+        console.log("No option selected, skipping module fetch");
+        return;
+      }
+      
+      console.log("Starting to fetch modules for option:", newExam.option);
+      setModuleLoading(true);
+      try {
+        const response = await getModulesByOptionId(newExam.option.id);
+        console.log("Modules fetch successful:", response);
+        setModules(response);
+      } catch (error) {
+        console.error("Module fetch error:", error);
+        console.error("Error details:", {
+          message: error.message,
+          response: error.response,
+          status: error.response?.status
+        });
+        setModules([]);
+      } finally {
+        setModuleLoading(false);
+      }
+    };
+  
+    fetchModules();
+  }, [newExam.option]);
+
   const tableData = useMemo(() => {
     if (!session) return [];
     const { dateDebut, dateFin } = session;
@@ -173,8 +226,9 @@ const ExamTable = ({ sessionId }) => {
   const closeAddExamDialog = () => {
     setShowAddExamDialog(false);
     setNewExam({
-      module: "",
+      module: null,
       enseignant: null,
+      option: null,
       nbEtudiants: "",
       locaux: [],
       departement: null,
@@ -189,36 +243,38 @@ const ExamTable = ({ sessionId }) => {
         !newExam.enseignant ||
         !newExam.nbEtudiants ||
         !newExam.locaux ||
-        newExam.locaux.length === 0
+        newExam.locaux.length === 0 ||
+        !newExam.option ||
+        !newExam.module
       ) {
         return;
       }
       if (editingExam) {
         const updatedExam = {
           ...editingExam,
-          module: newExam.module,
           enseignant: { id: newExam.enseignant.id },
           locaux: newExam.locaux.map((local) => ({ id: local.id })),
           departement: { id: newExam.departement.id },
+          option: { id: newExam.option.id }, 
+          moduleExamen: { id: newExam.module.id }, 
           nbEtudiants: parseInt(newExam.nbEtudiants),
         };
         await ExamService.updateExam(editingExam.id, updatedExam);
       } else {
         const examData = {
-          module: newExam.module,
           enseignant: { id: newExam.enseignant.id },
           locaux: newExam.locaux.map((local) => ({ id: local.id })),
           departement: { id: newExam.departement.id },
+          option: { id: newExam.option.id }, 
+          moduleExamen: { id: newExam.module.id }, 
           session: { id: session.id },
           date: state.selectedCell.date,
           horaire: state.selectedCell.horaire,
-          nbEtudiants: parseInt(newExam.nbEtudiants), 
+          nbEtudiants: parseInt(newExam.nbEtudiants),
         };
-        
-        
-        await ExamService.createExam(examData); 
+        await ExamService.createExam(examData);
       }
-      closeAddExamDialog(); 
+      closeAddExamDialog();
       await loadCellExams(state.selectedCell.date, state.selectedCell.horaire);
       handleCellClick(state.selectedCell.date, state.selectedCell.horaire);
     } catch (error) {
@@ -232,6 +288,7 @@ const ExamTable = ({ sessionId }) => {
       nbEtudiants: exam.nbEtudiants,
       locaux: exam.locaux || [],
       departement: exam.departement,
+      option: exam.option,
     });
     setEditingExam(exam);
     setShowAddExamDialog(true);
@@ -461,13 +518,23 @@ const ExamTable = ({ sessionId }) => {
                 style={{ width: "3rem" }}
               />
               <Column
-                header="Module"
-                body={(rowData) => (
-                  <div>
-                    <div className="text-primary">{rowData.module}</div>
-                  </div>
-                )}
-              />
+                  header="Module"
+                  body={(rowData) => (
+                    <div className="flex align-items-center">
+                      <i className="pi pi-book mr-2"></i>
+                      <span>{rowData.moduleExamen?.nom || 'Non défini'}</span> {/* Changé de rowData.module à rowData.moduleExamen */}
+                    </div>
+                  )}
+               />
+               <Column
+                  header="Option"
+                  body={(rowData) => (
+                    <div className="flex align-items-center">
+                      <i className="pi pi-book mr-2"></i>
+                      <span>{rowData.option?.nom || 'Non défini'}</span> {/* Changé de rowData.module à rowData.moduleExamen */}
+                    </div>
+                  )}
+               />
               <Column
                 header="Enseignant Responsable"
                 body={(rowData) => (
@@ -545,24 +612,7 @@ const ExamTable = ({ sessionId }) => {
         footer={addExamDialogFooter}
       >
         <div className="grid p-4">
-          <div className="col-12 field">
-            <label className="flex align-items-center gap-3 mb-2">
-              <span className="text-xl font-bold">Module</span>
-            </label>
-            <div className="p-inputgroup">
-              <span className="p-inputgroup-addon">
-                <i className="pi pi-book text-primary text-lg" />
-              </span>
-              <InputText
-                value={newExam.module}
-                onChange={(e) =>
-                  setNewExam({ ...newExam, module: e.target.value })
-                }
-                className="p-inputtext-lg"
-                placeholder="Entrez le nom du module"
-              />
-            </div>
-          </div>
+         
           <div className="col-12 field">
             <label className="flex align-items-center gap-3 mb-2">
               <span className="text-xl font-bold">Département</span>
@@ -584,27 +634,85 @@ const ExamTable = ({ sessionId }) => {
             </div>
           </div>
           {newExam.departement && (
-            <div className="col-12 field">
-              <label className="flex align-items-center gap-3 mb-2">
-                <span className="text-xl font-bold">Enseignant</span>
-              </label>
-              <div className="p-inputgroup">
-                <span className="p-inputgroup-addon">
-                  <i className="pi pi-user text-primary text-lg" />
-                </span>
-                <Dropdown
-                  value={newExam.enseignant}
-                  options={enseignants}
-                  onChange={(e) =>
-                    setNewExam({ ...newExam, enseignant: e.value })
-                  }
-                  optionLabel="nom"
-                  placeholder="Sélectionner un enseignant"
-                  className="w-full p-inputtext-lg"
-                />
-              </div>
+  <>
+
+<div className="col-12 field">
+      <label className="flex align-items-center gap-3 mb-2">
+        <span className="text-xl font-bold">Enseignant</span>
+      </label>
+      <div className="p-inputgroup">
+        <span className="p-inputgroup-addon">
+          <i className="pi pi-user text-primary text-lg" />
+        </span>
+        <Dropdown
+          value={newExam.enseignant}
+          options={enseignants}
+          onChange={(e) => setNewExam({ ...newExam, enseignant: e.value })}
+          optionLabel="nom"
+          placeholder="Sélectionner un enseignant"
+          className="w-full p-inputtext-lg"
+        />
+      </div>
+    </div>
+
+
+    <div className="col-12 field">
+          <label className="flex align-items-center gap-3 mb-2">
+            <span className="text-xl font-bold">Option</span>
+          </label>
+          <div className="p-inputgroup">
+            <span className="p-inputgroup-addon">
+              <i className="pi pi-tag text-primary text-lg" />
+            </span>
+            {/* Champ Option */}
+          <Dropdown
+            value={newExam.option}
+            options={options}
+            onChange={(e) => {
+              console.log("Selected option FULL OBJECT:", e.value); // Log complet de l'objet
+              console.log("Option ID:", e.value?.id); // Vérifie si l'ID existe
+              setNewExam({ 
+                ...newExam, 
+                option: e.value,
+                module: null 
+              });
+            }}
+            optionLabel="nom"
+            placeholder="Sélectionner une option"
+            className="w-full p-inputtext-lg"
+          />
+          </div>
+        </div>
+
+        {/* Champ Module */}
+        {newExam.option && (
+          <div className="col-12 field">
+            <label className="flex align-items-center gap-3 mb-2">
+              <span className="text-xl font-bold">Module</span>
+            </label>
+            <div className="p-inputgroup">
+              <span className="p-inputgroup-addon">
+                <i className="pi pi-book text-primary text-lg" />
+              </span>
+              <Dropdown
+                value={newExam.module}
+                options={modules}
+                onChange={(e) => {
+                  console.log("Module sélectionné:", e.value); // Ajoutez ce log
+                  setNewExam({ ...newExam, module: e.value });
+                }}
+                optionLabel="nom"
+                placeholder={moduleLoading ? "Chargement des modules..." : "Sélectionner un module"}
+                className="w-full p-inputtext-lg"
+                disabled={moduleLoading}
+              />
             </div>
-          )}
+          </div>
+        )}
+
+  </>
+)}
+
           <div className="col-12 field">
             <label className="flex align-items-center gap-3 mb-2">
               <span className="text-xl font-bold">Nombre d'étudiants</span>

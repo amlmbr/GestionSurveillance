@@ -91,3 +91,14 @@ export const getEnseignantsByDepartement = async (departementId) => {
     throw error;
   }
 };
+
+// Récupérer toutes les options d'un département
+export const getOptionsByDepartement = async (departementId) => {
+  try {
+    const response = await axiosInstance.get(`${API_URL}/${departementId}/options`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erreur lors de la récupération des options du département ${departementId}:`, error);
+    throw error;
+  }
+};

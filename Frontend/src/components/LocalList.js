@@ -105,6 +105,27 @@ const LocalList = () => {
    }
  };
 
+ const isFormValid = () => {
+   if (modalMode === 'add') {
+     return !!(
+       (
+         currentLocal.nom &&
+         currentLocal.capacite > 0 &&
+         currentLocal.type &&
+         currentLocal.nbSurveillants >= 0
+       )
+       // Note: estDisponible est un boolean donc pas besoin de le vérifier
+     );
+   }
+   return !!(
+     currentLocal.id &&
+     currentLocal.nom &&
+     currentLocal.capacite > 0 &&
+     currentLocal.type &&
+     currentLocal.nbSurveillants >= 0
+   );
+ };
+
   const handleDelete = (id) => {
     console.log('Deleting local with ID:', id); // Vérifier l'ID du local supprimé
     deleteLocal(id)
@@ -200,6 +221,7 @@ const LocalList = () => {
         label={modalMode === 'add' ? 'Ajouter' : 'Modifier'}
         icon="pi pi-check"
         onClick={handleSubmit}
+        disabled={!isFormValid()}
         autoFocus
       />
     </div>

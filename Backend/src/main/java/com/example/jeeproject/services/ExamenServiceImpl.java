@@ -54,7 +54,8 @@ public class ExamenServiceImpl implements ExamenService {
         existingExamen.setDepartement(examen.getDepartement());
         existingExamen.setEnseignant(examen.getEnseignant());
         existingExamen.setLocaux(examen.getLocaux());
-        existingExamen.setModule(examen.getModule());
+        existingExamen.setOption(examen.getOption());
+        existingExamen.setModuleExamen(examen.getModuleExamen());  
         existingExamen.setDate(examen.getDate());
         existingExamen.setHoraire(examen.getHoraire());
         existingExamen.setNbEtudiants(examen.getNbEtudiants());

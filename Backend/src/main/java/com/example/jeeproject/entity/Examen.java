@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import java.util.Set;
 import java.util.HashSet;
 import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 
 @Entity
 public class Examen {
@@ -22,12 +26,19 @@ public class Examen {
     @ManyToOne
     private Enseignant enseignant;
 
-
-    private String module;
     private LocalDate date;
     private String horaire; // ex: "start1-end1"
     private int nbEtudiants;
     
+    
+    @ManyToOne
+    @JoinColumn(name = "option_id", nullable = false) // Chaque module appartient à une option
+    private Option option;
+
+    @ManyToOne
+    @JoinColumn(name = "module_id", nullable = false)
+    private Module moduleExamen;
+
     
     @ManyToMany 
     @JoinTable(
@@ -71,12 +82,6 @@ public class Examen {
 		this.enseignant = enseignant;
 	}
 	
-	public String getModule() {
-		return module;
-	}
-	public void setModule(String module) {
-		this.module = module;
-	}
 	public LocalDate getDate() {
 		return date;
 	}
@@ -94,6 +99,22 @@ public class Examen {
 	}
 	public void setNbEtudiants(int nbEtudiants) {
 		this.nbEtudiants = nbEtudiants;
+	}
+
+	public Option getOption() {
+		return option;
+	}
+
+	public void setOption(Option option) {
+		this.option = option;
+	}
+
+	public Module getModuleExamen() {
+		return moduleExamen;
+	}
+
+	public void setModuleExamen(Module moduleExamen) {
+		this.moduleExamen = moduleExamen;
 	}
 
 	
