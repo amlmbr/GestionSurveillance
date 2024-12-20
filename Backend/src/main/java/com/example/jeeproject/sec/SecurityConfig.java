@@ -86,7 +86,8 @@ public class SecurityConfig {
                                     URLEncoder.encode(oauth2User.getAttribute("name"), StandardCharsets.UTF_8),
                                     URLEncoder.encode(oauth2User.getAttribute("picture"), StandardCharsets.UTF_8)
                             );
-
+                            String email = (String) oauth2User.getAttribute("email");
+                            System.out.println(email);
                             // Rediriger vers le frontend
                             response.sendRedirect(redirectUrl);
                         })
