@@ -99,6 +99,7 @@ const SurveillanceComponent = ({ sessionId }) => {
         try {
             setLoading(true);
             const assignments = await SurveillanceService.getSurveillanceAssignments(sessionId, selectedDepartement);
+            console.log(assignments)
             setSurveillanceAssignments(assignments);
         } catch (error) {
             console.error('Erreur de chargement des assignations:', error);
@@ -239,7 +240,7 @@ const SurveillanceComponent = ({ sessionId }) => {
         try {
             setLoading(true);
             await SurveillanceService.assignerSurveillant(assignmentData);
-    
+            await loadSurveillanceAssignments()
             toast.current.show({
                 severity: 'success',
                 summary: 'Succès',
@@ -262,7 +263,8 @@ const SurveillanceComponent = ({ sessionId }) => {
             setAssignmentDialogVisible(false);
     
             if (state.selectedCell) {
-                await handleCellClick(state.selectedCell.date, state.selectedCell.horaire);
+                
+                await handleCellClick(state.selectedCell.date, state.selectedCell.horaire,state.selectedCell);
             }
         } catch (error) {
             toast.current.show({
@@ -296,46 +298,49 @@ const SurveillanceComponent = ({ sessionId }) => {
         );
     };*/
     const renderCellContent = (rowData, field) => {
-        // First check if the field exists and has the required properties
         if (!rowData[field] || !field) {
             return null;
         }
-
         const date = rowData[field].date;
         const horaire = rowData[field].horaire;
-
-        // Check if we have valid date and horaire
+        // Récupérer l'ID de l'enseignant au lieu du nom
+        const enseignantId = rowData.enseignantId; 
+        
         if (!date || !horaire) {
             return null;
         }
-
         const key = `${date}_${horaire}`;
         const assignmentsList = surveillanceAssignments[key];
-    
-        if (assignmentsList && assignmentsList.length > 0) {
+        if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
+            return <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
+        }
+        
+        // Filtrer les surveillances pour ne montrer que celles du professeur courant
+        const professorAssignments = assignmentsList?.filter(
+            assignment => assignment.enseignant === rowData.enseignant
+        );
+        
+        if (professorAssignments && professorAssignments.length > 0) {
             return (
-                <div style={{ textAlign: 'center', fontSize: '14px' }}>
-                    {assignmentsList.map((assignment, index) => (
-                        <div key={index} className="mb-2">
-                            <span><strong>Local:</strong> {assignment.local}</span><br />
-                            <span><strong>Type:</strong> {assignment.typeSurveillant}</span>
+                <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#e3f2fd' }}>
+                    {professorAssignments.map((assignment, index) => (
+                        <div key={index} style={{ marginBottom: '4px' }}>
+                            <div><strong>Local:</strong> {assignment.local}</div>
+                            <div><strong>Type:</strong> {assignment.typeSurveillant}</div>
                         </div>
                     ))}
                 </div>
             );
-        } else if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
-            return <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
         } else {
             return (
                 <Button
                     label="Assigner"
-                    className="p-button-text"
-                    onClick={() => handleCellClick(date, horaire)}
+                    className="p-button-text p-button-sm"
+                    onClick={() => handleCellClick(date, horaire, enseignantId)} // Envoi de l'ID au lieu du nom
                 />
             );
         }
     };
-
 
 
     const handleExportSurveillances = async () => {
