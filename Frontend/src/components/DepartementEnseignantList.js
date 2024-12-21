@@ -81,22 +81,34 @@ const DepartementEnseignantList = () => {
 
   const loadAllEnseignants = () => {
     setLoading(true);
-    getEnseignants()
-      .then((response) => {
-        setAllEnseignants(response);
-        console.log("All Enseignants: ", response); // Log the AllEnseignants list here
+    Promise.all([getEnseignants(), getEnseignantsByDepartement(departementId)])
+      .then(([allEnseignantsResponse, departementEnseignantsResponse]) => {
+        // Créer un tableau des IDs des enseignants déjà dans le département
+        const departementEnseignantIds = departementEnseignantsResponse.map(
+          (enseignant) => enseignant.id
+        );
+
+        // Filtrer la liste de tous les enseignants pour exclure ceux déjà dans le département
+        const availableEnseignants = allEnseignantsResponse.filter(
+          (enseignant) => !departementEnseignantIds.includes(enseignant.id)
+        );
+
+        setAllEnseignants(availableEnseignants);
       })
-      .catch((error) => console.error("Error fetching enseignants:", error))
+      .catch((error) => {
+        console.error('Error fetching enseignants:', error);
+      })
       .finally(() => setLoading(false));
   };
 
   const handleOpenModal = (mode, enseignant = null) => {
     setModalMode(mode);
+    setSelectedEnseignants([]); // Réinitialiser la sélection
     setCurrentEnseignant(
       enseignant || {
-        nom: "",
-        prenom: "",
-        email: "",
+        nom: '',
+        prenom: '',
+        email: '',
         estDispense: false,
         nbSurveillances: 0,
         estReserviste: false,
@@ -104,43 +116,48 @@ const DepartementEnseignantList = () => {
     );
     setOpenModal(true);
   };
-
-  const handleCloseModal = () => {
-    setOpenModal(false);
-    setCurrentEnseignant({
-      nom: "",
-      prenom: "",
-      email: "",
-      estDispense: false,
-      nbSurveillances: 0,
-      estReserviste: false,
-    });
-  };
+ const handleCloseModal = () => {
+   setOpenModal(false);
+   setSelectedEnseignants([]); // Réinitialiser la sélection
+   setCurrentEnseignant({
+     nom: '',
+     prenom: '',
+     email: '',
+     estDispense: false,
+     nbSurveillances: 0,
+     estReserviste: false,
+   });
+ };
 
   const handleSubmit = () => {
     // Vérifier si selectedEnseignants contient au moins un enseignant
     if (selectedEnseignants.length >= 1) {
-      // Boucle à travers la liste selectedEnseignants et ajouter chaque enseignant
-      selectedEnseignants.forEach((enseignant) => {
+      // Créer un tableau de promesses pour tous les ajouts
+      const addPromises = selectedEnseignants.map((enseignant) =>
         addEnseignant(enseignant, departementId)
-          .then(() => {
-            loadEnseignants(); // Recharge les enseignants après chaque ajout
-          })
-          .catch((error) => console.error("Error adding enseignant:", error));
-      });
-      // Fermer la modal après avoir ajouté tous les enseignants
-      handleCloseModal();
+      );
+
+      // Attendre que tous les ajouts soient terminés
+      Promise.all(addPromises)
+        .then(() => {
+          loadEnseignants(); // Recharge la liste des enseignants du département
+          loadAllEnseignants(); // Recharge la liste de tous les enseignants disponibles
+          handleCloseModal();
+        })
+        .catch((error) => console.error('Error adding enseignants:', error));
     } else {
-      console.log("Aucun enseignant sélectionné");
+      console.log('Aucun enseignant sélectionné');
     }
+
     // Si modalMode est 'add', on ajoute l'enseignant actuel
-    if (modalMode === "add" && !selectedEnseignants.length) {
+    if (modalMode === 'add' && !selectedEnseignants.length) {
       addEnseignant(currentEnseignant, departementId)
         .then(() => {
           loadEnseignants();
+          loadAllEnseignants(); // Ajouter cette ligne
           handleCloseModal();
         })
-        .catch((error) => console.error("Error adding enseignant:", error));
+        .catch((error) => console.error('Error adding enseignant:', error));
     } else {
       // Sinon, on met à jour l'enseignant existant
       updateEnseignant(currentEnseignant.id, {
@@ -149,27 +166,26 @@ const DepartementEnseignantList = () => {
       })
         .then(() => {
           loadEnseignants();
+          loadAllEnseignants(); // Ajouter cette ligne
           handleCloseModal();
         })
-        .catch((error) => console.error("Error updating enseignant:", error));
+        .catch((error) => console.error('Error updating enseignant:', error));
     }
   };
 
   const isFormValid = () => {
-    if (modalMode === "add") {
-      return !!(
-        currentEnseignant.nom &&
-        currentEnseignant.prenom &&
-        currentEnseignant.email
-      );
+    if (modalMode === 'add') {
+      // Pour le mode ajout, on vérifie uniquement si au moins un enseignant est sélectionné
+      return selectedEnseignants.length > 0;
     }
+    // Pour le mode édition, on garde la vérification des champs existants
     return !!(
       currentEnseignant.id &&
       currentEnseignant.nom &&
-      currentEnseignant.prenom &&
-      currentEnseignant.email
+      currentEnseignant.prenom
     );
   };
+
   const handleDelete = (id) => {
     deleteEnseignant(id)
       .then(() => {

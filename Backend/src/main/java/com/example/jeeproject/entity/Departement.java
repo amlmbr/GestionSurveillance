@@ -22,7 +22,7 @@ public class Departement {
     @NotBlank(message = "Le nom du département est obligatoire")
     private String nom;
 
-    @OneToMany(mappedBy = "departement", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "departement",  cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     //@JsonManagedReference
 	@JsonManagedReference("enseignant-departement")  // Ajout du nom de référence
 	private List<Enseignant> enseignants = new ArrayList<>();
