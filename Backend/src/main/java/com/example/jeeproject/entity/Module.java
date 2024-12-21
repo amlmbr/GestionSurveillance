@@ -22,7 +22,7 @@ public class Module {
     @NotBlank(message = "Le nom du module est obligatoire")
     private String nom;
 
-    @ManyToOne
+    @ManyToOne(optional = true)
     @JoinColumn(name = "enseignant_id", nullable = false) // Chaque module a un responsable
     //@JsonManagedReference("module-enseignant")
     @JsonBackReference("module-enseignant")  // Changé en JsonBackReference

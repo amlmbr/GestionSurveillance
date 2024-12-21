@@ -39,7 +39,7 @@ public class Enseignant {
     @JsonBackReference("enseignant-departement")  // Ajout du nom de référence
     private Departement departement;
 
-	@OneToMany(mappedBy = "responsable", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "responsable",cascade = CascadeType.ALL, orphanRemoval = true)
     //@JsonBackReference("module-enseignant")
     @JsonManagedReference("module-enseignant")  // Changé en JsonManagedReference
     private List<Module> modulesResponsables;
