@@ -23,12 +23,23 @@ public class SurveillanceController {
     @Autowired
     private SurveillanceService surveillanceService;
 
+   
     @GetMapping("/emploi")
-    public ResponseEntity getEmploiSurveillance(
+    public ResponseEntity<?> getEmploiSurveillance(
             @RequestParam Long sessionId,
             @RequestParam Long departementId) {
-        return ResponseEntity.ok(surveillanceService.getEmploiSurveillance(sessionId, departementId));
+        try {
+            List<Map<String, Object>> emploi = surveillanceService.getEmploiSurveillance(sessionId, departementId);
+            if (emploi == null || emploi.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Aucune assignation trouvée.");
+            }
+            return ResponseEntity.ok(emploi);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Erreur interne : " + e.getMessage()));
+        }
     }
+
 
     @GetMapping("/examens")
     public ResponseEntity getExamens(
@@ -56,12 +67,7 @@ public class SurveillanceController {
     @PostMapping("/assigner")
     public ResponseEntity<?> assignerSurveillant(@RequestBody AssignSurveillantRequest request) {
         try {
-            boolean success = surveillanceService.assignerSurveillant(
-                request.getExamenId(),
-                request.getEnseignantId(),
-                request.getLocalId(),
-                request.getTypeSurveillant()
-            );
+            boolean success = surveillanceService.assignerSurveillant(request);
 
             return ResponseEntity.ok().body(Map.of("message", "Surveillant assigné avec succès."));
         } catch (RuntimeException e) {
@@ -72,4 +78,5 @@ public class SurveillanceController {
                 .body(Map.of("message", "Erreur interne: " + e.getMessage()));
         }
     }
+
 }

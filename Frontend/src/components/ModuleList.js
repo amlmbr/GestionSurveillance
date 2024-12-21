@@ -10,19 +10,19 @@ import {
   deleteModule,
   updateModule,
   addModule,
-} from '../services/moduleService';
-import { getEnseignants } from '../services/enseignantService';
-import { getOptions } from '../services/optionService';
-import './ModuleList.css';
+} from "../services/moduleService";
+import { getEnseignants } from "../services/enseignantService";
+import { getOptions } from "../services/optionService";
+import "./ModuleList.css";
 
 const ModuleList = () => {
   const [modules, setModules] = useState([]);
-  const [globalFilterValue, setGlobalFilterValue] = useState('');
+  const [globalFilterValue, setGlobalFilterValue] = useState("");
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
-  const [modalMode, setModalMode] = useState('add');
+  const [modalMode, setModalMode] = useState("add");
   const [currentModule, setCurrentModule] = useState({
-    nom: '',
+    nom: "",
     responsable: null,
     option: null,
   });
@@ -95,10 +95,10 @@ const ModuleList = () => {
     setLoading(true);
     getModules()
       .then((response) => {
-        console.log('Liste des modules:', response); // Ajout du log
+        console.log("Liste des modules:", response); // Ajout du log
         setModules(response);
       })
-      .catch((error) => console.error('Error fetching modules', error))
+      .catch((error) => console.error("Error fetching modules", error))
       .finally(() => setLoading(false));
   };
 
@@ -107,7 +107,7 @@ const ModuleList = () => {
       .then((response) => {
         setEnseignants(response);
       })
-      .catch((error) => console.error('Error fetching enseignants', error));
+      .catch((error) => console.error("Error fetching enseignants", error));
   };
 
   const loadOptions = () => {
@@ -115,67 +115,67 @@ const ModuleList = () => {
       .then((response) => {
         setOptions(response);
       })
-      .catch((error) => console.error('Error fetching options', error));
+      .catch((error) => console.error("Error fetching options", error));
   };
 
- const handleOpenModal = async (mode, module = null) => {
-   console.log('Module à modifier:', module);
+  const handleOpenModal = async (mode, module = null) => {
+    console.log("Module à modifier:", module);
 
-   // S'assurer que les listes sont chargées
-   if (enseignants.length === 0) {
-     await loadEnseignants();
-   }
-   if (options.length === 0) {
-     await loadOptions();
-   }
+    // S'assurer que les listes sont chargées
+    if (enseignants.length === 0) {
+      await loadEnseignants();
+    }
+    if (options.length === 0) {
+      await loadOptions();
+    }
 
-   setModalMode(mode);
+    setModalMode(mode);
 
-   if (mode === 'edit' && module) {
-     console.log('Liste des enseignants:', enseignants);
-     console.log('Liste des options:', options);
+    if (mode === "edit" && module) {
+      console.log("Liste des enseignants:", enseignants);
+      console.log("Liste des options:", options);
 
-     // Trouver l'enseignant correspondant
-     const selectedResponsable = enseignants.find(
-       (e) => e.nom.trim() === module.responsableNom.trim()
-     );
+      // Trouver l'enseignant correspondant
+      const selectedResponsable = enseignants.find(
+        (e) => e.nom.trim() === module.responsableNom.trim()
+      );
 
-     // Trouver l'option correspondante
-     const selectedOption = options.find(
-       (o) => o.nom.trim() === module.optionNom.trim()
-     );
+      // Trouver l'option correspondante
+      const selectedOption = options.find(
+        (o) => o.nom.trim() === module.optionNom.trim()
+      );
 
-     console.log('Responsable trouvé:', selectedResponsable);
-     console.log('Option trouvée:', selectedOption);
+      console.log("Responsable trouvé:", selectedResponsable);
+      console.log("Option trouvée:", selectedOption);
 
-     setCurrentModule({
-       id: module.id,
-       nom: module.nom,
-       responsable: selectedResponsable || null,
-       option: selectedOption || null,
-     });
-   } else {
-     setCurrentModule({
-       nom: '',
-       responsable: null,
-       option: null,
-     });
-   }
+      setCurrentModule({
+        id: module.id,
+        nom: module.nom,
+        responsable: selectedResponsable || null,
+        option: selectedOption || null,
+      });
+    } else {
+      setCurrentModule({
+        nom: "",
+        responsable: null,
+        option: null,
+      });
+    }
 
-   setOpenModal(true);
- };
+    setOpenModal(true);
+  };
 
   const handleCloseModal = () => {
     setOpenModal(false);
     setCurrentModule({
-      nom: '',
+      nom: "",
       responsable: null,
       option: null,
     });
   };
 
   const isFormValid = () => {
-    if (modalMode === 'add') {
+    if (modalMode === "add") {
       return !!(
         currentModule.nom &&
         currentModule.responsable &&
@@ -192,26 +192,25 @@ const ModuleList = () => {
 
   const handleSubmit = () => {
     if (!currentModule || !currentModule.nom) {
-      console.error('Le nom du module est manquant');
+      console.error("Le nom du module est manquant");
       return;
     }
 
     if (modalMode === 'add') {
       console.log("le module a ajouter est ",currentModule);
-      console.log(currentModule)
       addModule(currentModule)
         .then(() => {
           loadModules();
           handleCloseModal();
         })
-        .catch((error) => console.error('Error adding module', error));
+        .catch((error) => console.error("Error adding module", error));
     } else {
       updateModule(currentModule.id, { ...currentModule })
         .then(() => {
           loadModules();
           handleCloseModal();
         })
-        .catch((error) => console.error('Error updating module', error));
+        .catch((error) => console.error("Error updating module", error));
     }
   };
 
@@ -220,21 +219,21 @@ const ModuleList = () => {
       .then(() => {
         loadModules();
       })
-      .catch((error) => console.error('Error deleting module', error));
+      .catch((error) => console.error("Error deleting module", error));
   };
 
   const actionBodyTemplate = (rowData) => {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
         <Button
           icon="pi pi-pencil"
           rounded
           outlined
           className="p-button-warning"
-          onClick={() => handleOpenModal('edit', rowData)}
+          onClick={() => handleOpenModal("edit", rowData)}
           tooltip="Modifier"
-          tooltipOptions={{ position: 'top' }}
-          style={{ margin: '0 0.1rem' }}
+          tooltipOptions={{ position: "top" }}
+          style={{ margin: "0 0.1rem" }}
         />
         <Button
           icon="pi pi-trash"
@@ -243,8 +242,8 @@ const ModuleList = () => {
           severity="danger"
           onClick={() => handleDelete(rowData.id)}
           tooltip="Supprimer"
-          tooltipOptions={{ position: 'top' }}
-          style={{ margin: '0 0.1rem' }}
+          tooltipOptions={{ position: "top" }}
+          style={{ margin: "0 0.1rem" }}
         />
       </div>
     );
@@ -255,7 +254,7 @@ const ModuleList = () => {
       <div>
         <div
           className="flex justify-content-between align-items-center"
-          style={{ padding: '0 0.5rem' }}
+          style={{ padding: "0 0.5rem" }}
         >
           <h2 className="m-0">Liste des Modules</h2>
         </div>
@@ -311,7 +310,7 @@ const ModuleList = () => {
         className="p-button-text"
       />
       <Button
-        label={modalMode === 'add' ? 'Ajouter' : 'Modifier'}
+        label={modalMode === "add" ? "Ajouter" : "Modifier"}
         icon="pi pi-check"
         onClick={handleSubmit}
         disabled={!isFormValid()}
@@ -323,12 +322,12 @@ const ModuleList = () => {
   return (
     <div
       style={{
-        backgroundImage: 'url(/ensajbg.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        minHeight: '100vh',
-        position: 'relative',
+        backgroundImage: "url(/ensajbg.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        minHeight: "100vh",
+        position: "relative",
       }}
     >
       <div className="data-table-container">
@@ -348,54 +347,54 @@ const ModuleList = () => {
             showGridlines
             stripedRows
             sortMode="multiple"
-            globalFilterFields={['id', 'nom', 'responsableNom', 'optionNom']}
+            globalFilterFields={["id", "nom", "responsableNom", "optionNom"]}
           >
             <Column
               field="id"
               header="ID"
               sortable
-              style={{ minWidth: '5rem' }}
+              style={{ minWidth: "5rem" }}
             />
             <Column
               field="nom"
               header="Nom"
               sortable
-              style={{ minWidth: '10rem' }}
+              style={{ minWidth: "10rem" }}
             />
             <Column
               field="responsableNom"
               header="Responsable"
               sortable
-              style={{ minWidth: '10rem' }}
+              style={{ minWidth: "10rem" }}
             />
             <Column
               field="optionNom"
               header="Option"
               sortable
-              style={{ minWidth: '10rem' }}
+              style={{ minWidth: "10rem" }}
             />
             <Column
               body={actionBodyTemplate}
               header="Actions"
-              style={{ minWidth: '10rem', textAlign: 'center' }}
+              style={{ minWidth: "10rem", textAlign: "center" }}
             />
           </DataTable>
         </div>
       </div>
       <Dialog
         visible={openModal}
-        style={{ width: '550px' }}
+        style={{ width: "550px" }}
         header={
           <div className="flex align-items-center gap-3">
             <i
               className="pi pi-building text-primary text-3xl"
-              style={{ fontSize: '20px' }}
+              style={{ fontSize: "20px" }}
             />
             <span
               className="text-2xl font-bold"
-              style={{ marginLeft: '0.8rem' }}
+              style={{ marginLeft: "0.8rem" }}
             >
-              {modalMode === 'add' ? 'Ajouter un module' : 'Modifier le module'}
+              {modalMode === "add" ? "Ajouter un module" : "Modifier le module"}
             </span>
           </div>
         }
@@ -406,16 +405,16 @@ const ModuleList = () => {
       >
         <div className="grid p-4 gap-6">
           {/* Nom */}
-          <div className="col-12" style={{ marginBottom: '1rem' }}>
+          <div className="col-12" style={{ marginBottom: "1rem" }}>
             <label className="flex align-items-center gap-3 mb-4">
               <span
                 className="text-xl font-bold"
-                style={{ fontWeight: 'bold' }}
+                style={{ fontWeight: "bold" }}
               >
                 Nom
               </span>
             </label>
-            <div className="p-inputgroup" style={{ marginTop: '0.6rem' }}>
+            <div className="p-inputgroup" style={{ marginTop: "0.6rem" }}>
               <span className="p-inputgroup-addon">
                 <i className="pi pi-pencil text-primary text-lg" />
               </span>
@@ -430,16 +429,16 @@ const ModuleList = () => {
           </div>
 
           {/* Responsable */}
-          <div className="col-12 " style={{ marginBottom: '1rem' }}>
+          <div className="col-12 " style={{ marginBottom: "1rem" }}>
             <label className="flex align-items-center gap-3 mb-4">
               <span
                 className="text-xl font-bold"
-                style={{ fontWeight: 'bold' }}
+                style={{ fontWeight: "bold" }}
               >
                 Responsable
               </span>
             </label>
-            <div className="p-inputgroup" style={{ marginTop: '0.6rem' }}>
+            <div className="p-inputgroup" style={{ marginTop: "0.6rem" }}>
               <span className="p-inputgroup-addon">
                 <i className="pi pi-user text-primary text-lg" />
               </span>
@@ -457,16 +456,16 @@ const ModuleList = () => {
           </div>
 
           {/* Option */}
-          <div className="col-12 " style={{ marginBottom: '1rem' }}>
+          <div className="col-12 " style={{ marginBottom: "1rem" }}>
             <label className="flex align-items-center gap-3 mb-4">
               <span
                 className="text-xl font-bold"
-                style={{ fontWeight: 'bold' }}
+                style={{ fontWeight: "bold" }}
               >
                 Option
               </span>
             </label>
-            <div className="p-inputgroup" style={{ marginTop: '0.6rem' }}>
+            <div className="p-inputgroup" style={{ marginTop: "0.6rem" }}>
               <span className="p-inputgroup-addon">
                 <i className="pi pi-list text-primary text-lg" />
               </span>

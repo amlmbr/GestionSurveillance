@@ -144,7 +144,7 @@ const EnseignantList = () => {
   };
 
   const isFormValid = () => {
-    if (modalMode === 'add') {
+    if (modalMode === "add") {
       return !!(
         currentEnseignant.nom &&
         currentEnseignant.prenom &&
@@ -259,7 +259,7 @@ const EnseignantList = () => {
         className="p-button-text"
       />
       <Button
-        label={modalMode === 'add' ? 'Ajouter' : 'Modifier'}
+        label={modalMode === "add" ? "Ajouter" : "Modifier"}
         icon="pi pi-check"
         onClick={handleSubmit}
         disabled={!isFormValid()}

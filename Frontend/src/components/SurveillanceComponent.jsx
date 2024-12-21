@@ -10,12 +10,13 @@ import { Button } from 'primereact/button';
 import { Message } from 'primereact/message';
 import { ColumnGroup } from 'primereact/columngroup';
 import { Row } from 'primereact/row';
-import { getEnseignantsByDepartement, getDepartements } from '../services/departementService';
+import { getEnseignantsByDepartement, getOptionsByDepartement, getDepartements } from '../services/departementService';
 import ExamService from '../services/examService';
 import SessionService from '../services/SessionService';
 import AssignmentDialog from './AssignmentDialog';
 import SurveillanceService from '../services/surveillanceService';
 import SurveillanceAssignmentDisplay from './SurveillanceAssignmentDisplay';
+import SurveillanceCell from './SurveillanceCell';
 import * as XLSX from 'xlsx';
 
 
@@ -23,6 +24,8 @@ const SurveillanceComponent = ({ sessionId }) => {
     const [departements, setDepartements] = useState([]);
     const [selectedDepartement, setSelectedDepartement] = useState(null);
     const [enseignants, setEnseignants] = useState([]);
+    const [module, setModule] = useState([]);
+    const [options, setOptions] = useState([]);
     const [session, setSession] = useState(null);
     const [horaires, setHoraires] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -32,6 +35,7 @@ const SurveillanceComponent = ({ sessionId }) => {
         selectedCell: null,
         showDialog: false,
     });
+    const [refreshKey, setRefreshKey] = useState(0);
     const [assignmentDialogVisible, setAssignmentDialogVisible] = useState(false);
     const [selectedExam, setSelectedExam] = useState(null);
     const [surveillanceAssignments, setSurveillanceAssignments] = useState({});
@@ -90,11 +94,18 @@ const SurveillanceComponent = ({ sessionId }) => {
     const loadSurveillanceAssignments = async () => {
         try {
             const assignments = await SurveillanceService.getSurveillanceAssignments(sessionId, selectedDepartement);
-            const assignmentsMap = assignments.reduce((acc, assignment) => {
-                const key = `${assignment.date}_${assignment.horaire}`;
-                acc[key] = assignment;
-                return acc;
-            }, {});
+            
+            // Create a map of assignments using date_horaire as ke
+            const assignmentsMap = {};
+assignments.forEach(assignment => {
+    const key = `${assignment.date}_${assignment.horaire}`;
+    assignmentsMap[key] = {
+        local: assignment.local.nom, // Utilisez directement le nom du local
+        typeSurveillant: assignment.typeSurveillant,
+        enseignant: `${assignment.enseignant.nom} ${assignment.enseignant.prenom}` // Ajoutez le nom de l'enseignant
+    };
+});
+            
             setSurveillanceAssignments(assignmentsMap);
         } catch (error) {
             showError('Erreur lors du chargement des assignations de surveillance');
@@ -211,29 +222,7 @@ const SurveillanceComponent = ({ sessionId }) => {
     }, [enseignants, session, horaires]);
 
 
-    /*const handleAssignSurveillant = async (examId) => {
-        if (!state.selectedCell || !examId) {
-          console.error('Missing data for assignment');
-          return;
-        }
     
-        setLoading(true);
-        try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Update UI after successful assignment
-          setState(prev => ({
-            ...prev,
-            showDialog: false
-          }));
-        } catch (error) {
-          console.error('Error assigning surveillant:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-     */
       const handleAssignSurveillant = async (exam) => {
         if (!exam) {
             console.error("Aucun examen sélectionné");
@@ -247,124 +236,241 @@ const SurveillanceComponent = ({ sessionId }) => {
     const handleAssignment = async (assignmentData) => {
         try {
             setLoading(true);
-            
-            // Appel du service pour assigner le surveillant
             await SurveillanceService.assignerSurveillant(assignmentData);
     
-            // Afficher un message de succès
             toast.current.show({
                 severity: 'success',
                 summary: 'Succès',
                 detail: 'Surveillant assigné avec succès',
-                life: 3000
+                life: 3000,
             });
     
-            // Fermer le dialogue
+            // Mettre à jour l'objet surveillanceAssignments localement
+            const key = `${assignmentData.date}_${assignmentData.horaire}`;
+            setSurveillanceAssignments(prev => ({
+                ...prev,
+                [key]: {
+                    local: assignmentData.local,
+                    typeSurveillant: assignmentData.typeSurveillant,
+                    enseignant: assignmentData.enseignant,
+                },
+            }));
+    
+            setRefreshKey(prev => prev + 1);
             setAssignmentDialogVisible(false);
     
-            // Recharger les assignations de surveillance
-            await loadSurveillanceAssignments();
-    
-            // Optionnel : Mettre à jour la liste des examens ou rafraîchir les données
             if (state.selectedCell) {
                 await handleCellClick(state.selectedCell.date, state.selectedCell.horaire);
             }
         } catch (error) {
-            // Afficher un message d'erreur détaillé
             toast.current.show({
                 severity: 'error',
                 summary: 'Erreur',
                 detail: error.response?.data?.message || "Erreur lors de l'assignation du surveillant",
-                life: 5000
+                life: 5000,
             });
         } finally {
             setLoading(false);
         }
     };
+    
     const renderCellContent = (date, horaire) => {
         const key = `${date}_${horaire}`;
-        const surveillanceAssignment = surveillanceAssignments[key];
+        const assignment = surveillanceAssignments[key];
         
-        // Si une assignation existe, afficher les détails de la surveillance
-        if (surveillanceAssignment) {
+        if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
             return (
-                <div className="flex align-items-center justify-content-center" style={{ flexDirection: 'column', textAlign: 'center' }}>
-                    <span className="font-bold">{surveillanceAssignment.local?.nom}</span> {/* Affiche le nom du local */}
-                    <span className="text-italic">{surveillanceAssignment.typeSurveillant}</span> {/* Affiche le type de surveillant */}
+                <div className="flex justify-center items-center">
+                    <ProgressSpinner style={{ width: '20px', height: '20px' }} />
                 </div>
             );
         }
-        
-        // Sinon, afficher l'icône de calendrier pour une cellule non assignée
-        const isLoading = state.loadingCell?.date === date && state.loadingCell?.horaire === horaire;
-        
-        return isLoading ? (
-            <ProgressSpinner style={{ width: '20px', height: '20px' }} />
-        ) : (
-            <i 
-                className="pi pi-calendar text-primary" 
-                style={{ fontSize: '1.2rem' }} 
+    
+        return (
+            <SurveillanceCell 
+                assignment={assignment}
                 onClick={() => handleCellClick(date, horaire)}
             />
         );
     };
+    const renderSurveillanceCell = (rowData, field) => {
+        const { date, horaire } = rowData[field];
+        const key = `${date}_${horaire}`;
+        const assignment = surveillanceAssignments[key];
     
-    
-
+        if (assignment) {
+            // Si une assignation existe, afficher les détails
+            return (
+                <div style={{ textAlign: 'center', fontSize: '14px' }}>
+                    <span><strong>Local:</strong> {assignment.local}</span><br />
+                    <span><strong>Type:</strong> {assignment.typeSurveillant}</span>
+                </div>
+            );
+        } else if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
+            // Afficher un spinner si la cellule est en chargement
+            return <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
+        } else {
+            // Sinon, afficher le bouton "Assigner"
+            return (
+                <Button
+                    label="Assigner"
+                    className="p-button-text"
+                    onClick={() => handleCellClick(date, horaire)}
+                />
+            );
+        }
+    };
     
 
     const handleExportSurveillances = async () => {
         try {
             setLoading(true);
-            
-            // Récupération des données à exporter
-            const exportData = tableData.map(row => {
-                const rowData = {
-                    "Enseignant": row.enseignant, // Nom de l'enseignant
-                };
-                
-                // Ajoutez les données des examens/assignations pour chaque date et horaire
-                Object.keys(row).forEach(key => {
-                    if (key !== 'enseignant' && key !== 'enseignantId') {
-                        const [date, horaire] = key.split('_');
-                        const assignment = surveillanceAssignments[key];
-                        
-                        rowData[`${date} ${horaire}`] = assignment 
-                            ? `${assignment.local?.nom} (${assignment.typeSurveillant})`
-                            : 'Non assigné'; // Assigner le texte selon les données
+    
+            // Récupérer les données de surveillance depuis le backend
+            const surveillanceData = await SurveillanceService.getEmploiSurveillance(sessionId, selectedDepartement);
+    
+            // Construire les colonnes dynamiquement avec regroupement "Matin" et "Après-midi"
+            const headers = ["Enseignants"];
+            const dateColumns = [];
+    
+            surveillanceData.forEach((jour) => {
+                const heuresMatin = [];
+                const heuresApresMidi = [];
+    
+                Object.keys(jour.horaires).forEach((horaire) => {
+                    const [startHour] = horaire.split("-").map((h) => parseInt(h.split(":")[0], 10));
+                    if (startHour < 12) {
+                        heuresMatin.push(horaire);
+                    } else {
+                        heuresApresMidi.push(horaire);
                     }
                 });
-                
+    
+                // Trier les heures
+                const heuresTrieesMatin = heuresMatin.sort((a, b) => a.localeCompare(b));
+                const heuresTrieesApresMidi = heuresApresMidi.sort((a, b) => a.localeCompare(b));
+    
+                // Ajouter les colonnes "Matin" et "Après-midi" avec leurs heures
+                heuresTrieesMatin.forEach((horaire) => {
+                    const columnKey = `Matin ${jour.date} ${horaire}`;
+                    headers.push(columnKey);
+                    dateColumns.push({ date: jour.date, horaire, periode: "Matin" });
+                });
+    
+                heuresTrieesApresMidi.forEach((horaire) => {
+                    const columnKey = `Après-midi ${jour.date} ${horaire}`;
+                    headers.push(columnKey);
+                    dateColumns.push({ date: jour.date, horaire, periode: "Après-midi" });
+                });
+            });
+    
+            // Préparer les données des enseignants
+            const enseignantsData = enseignants.map((enseignant) => {
+                const rowData = {
+                    "Enseignants": `${enseignant.nom} ${enseignant.prenom}`,
+                };
+    
+                // Pour chaque combinaison date/heure/période, vérifier l'affectation
+                dateColumns.forEach(({ date, horaire, periode }) => {
+                    const examens = surveillanceData.find((jour) => jour.date === date)?.horaires[horaire] || [];
+                    const assignments = examens.flatMap((examen) => examen.surveillants || []);
+                    const assigned = assignments.find(
+                        (assignment) =>
+                            `${assignment.enseignant.nom} ${assignment.enseignant.prenom}` ===
+                            `${enseignant.nom} ${enseignant.prenom}`
+                    );
+    
+                    rowData[`${periode} ${date} ${horaire}`] = assigned
+                        ? `${assigned.local} (${assigned.typeSurveillant})`
+                        : "Non assigné";
+                });
+    
                 return rowData;
             });
     
-            // Créer une feuille de calcul
-            const ws = XLSX.utils.json_to_sheet(exportData);
+            // Générer une feuille Excel à partir des données
+            const ws = XLSX.utils.json_to_sheet(enseignantsData, { header: headers });
     
-            // Créer un classeur
+            // Ajuster les largeurs des colonnes
+            ws["!cols"] = headers.map((_, index) => ({
+                wch: index === 0 ? 25 : 20, // Colonne Enseignants plus large
+            }));
+    
+            // Appliquer des styles aux cellules (facultatif)
+            for (let i = 0; i <= enseignantsData.length; i++) {
+                for (let j = 0; j < headers.length; j++) {
+                    const cellRef = XLSX.utils.encode_cell({ r: i, c: j });
+                    if (!ws[cellRef]) continue;
+    
+                    ws[cellRef].s = {
+                        alignment: {
+                            vertical: "center",
+                            horizontal: "center",
+                            wrapText: true,
+                        },
+                        border: {
+                            top: { style: "thin" },
+                            bottom: { style: "thin" },
+                            left: { style: "thin" },
+                            right: { style: "thin" },
+                        },
+                    };
+    
+                    if (i === 0) {
+                        ws[cellRef].s.font = { bold: true }; // Gras pour les en-têtes
+                        ws[cellRef].s.fill = { fgColor: { rgb: "E2E8F0" } }; // Fond gris clair pour les en-têtes
+                    }
+                }
+            }
+    
+            // Créer un classeur Excel
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Surveillances');
+            XLSX.utils.book_append_sheet(wb, ws, "Planning Surveillances");
     
-            // Exporter le fichier Excel
-            XLSX.writeFile(wb, 'surveillances.xlsx');
-            
+            // Générer et télécharger le fichier Excel
+            const fileName = `Planning_Surveillances_${new Date().toISOString().split("T")[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+    
             toast.current.show({
-                severity: 'success',
-                summary: 'Exportation',
-                detail: 'Surveillance exportée avec succès',
-                life: 3000
+                severity: "success",
+                summary: "Exportation réussie",
+                detail: "Le planning des surveillances a été exporté avec succès",
+                life: 3000,
             });
+        } catch (error) {
+            console.error("Erreur lors de l'exportation:", error);
+            toast.current.show({
+                severity: "error",
+                summary: "Erreur",
+                detail: "Une erreur est survenue lors de l'exportation",
+                life: 3000,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    
+    const handleExportPDF = async () => {
+        try {
+            setLoading(true);
+            await SurveillanceService.exporterSurveillancesPDF(
+                sessionId,
+                selectedDepartement,
+                toast.current
+            );
         } catch (error) {
             toast.current.show({
                 severity: 'error',
                 summary: 'Erreur',
-                detail: 'Échec de l\'exportation',
+                detail: 'Échec de l\'exportation PDF',
                 life: 3000
             });
         } finally {
             setLoading(false);
         }
     };
+
     
       
       const locauxTemplate = (rowData) => (
@@ -406,13 +512,22 @@ const SurveillanceComponent = ({ sessionId }) => {
             placeholder="Sélectionnez un département"
         />
     </div>
-    <Button 
-        label="Exporter Excel" 
-        icon="pi pi-file-excel" 
-        onClick={handleExportSurveillances}
-        disabled={!selectedDepartement || loading}
-        className="p-button-success"
-    />
+    <div className="flex gap-2">
+                <Button 
+                    label="Exporter Excel" 
+                    icon="pi pi-file-excel" 
+                    onClick={handleExportSurveillances}
+                    disabled={!selectedDepartement || loading}
+                    className="p-button-success"
+                />
+                <Button 
+                    label="Exporter PDF" 
+                    icon="pi pi-file-pdf" 
+                    onClick={handleExportPDF}
+                    disabled={!selectedDepartement || loading}
+                    className="p-button-danger"
+                />
+    </div>
 </div>
 
                         <br></br>
@@ -422,6 +537,7 @@ const SurveillanceComponent = ({ sessionId }) => {
                             </div>
                         ) : (
                             <DataTable
+                                key={refreshKey}
                                 value={tableData}
                                 responsiveLayout="scroll"
                                 showGridlines
@@ -480,28 +596,38 @@ const SurveillanceComponent = ({ sessionId }) => {
                                 style={{ width: '3rem' }}
                             />
                             <Column
-                                header="Module"
-                                body={(rowData) => (
-                                    <div>
-                                        <div className="text-lg font-bold">EXAMEN {rowData.index + 1}</div>
-                                        <div className="text-primary">{rowData.module}</div>
-                                    </div>
-                                )}
-                            />
-                            
-                            <Column 
-                                header="Locaux" 
-                                body={locauxTemplate}
-                                />
-                                <Column 
-                                    header="Enseignant Responsable" 
-                                    body={(rowData) => (
-                                        <div className="flex align-items-center">
-                                        <i className="pi pi-user mr-2"></i>
-                                        <span>{rowData.enseignant.nom} {rowData.enseignant.prenom}</span>
-                                        </div>
-                                    )}
-                                     />
+    header="Option"
+    body={(rowData) => (
+        <div className="flex flex-col">
+            <div className="text-sm text-gray-600">
+                 {rowData.option?.nom}
+            </div>
+        </div>
+    )}
+/>
+<Column
+    header="Module"
+    body={(rowData) => (
+        <div className="flex flex-col">
+            <div className="text-sm text-gray-600">
+                 {rowData.moduleExamen?.nom || 'Non spécifié'}
+            </div>
+        </div>
+    )}
+/>
+<Column
+    header="Local"
+    body={locauxTemplate}
+/>
+<Column
+    header="Enseignant Responsable"
+    body={(rowData) => (
+        <div className="flex align-items-center">
+            <i className="pi pi-user mr-2"></i>
+            <span>{rowData.enseignant?.nom} {rowData.enseignant?.prenom}</span>
+        </div>
+    )}
+/>
                                <Column
                                 header="Actions"
                                 body={(data) => (  // ici on reçoit le paramètre data qui contient les données de la ligne
