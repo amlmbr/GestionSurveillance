@@ -1,6 +1,6 @@
-import axiosInstance from '../axiosapi/axiosInstance';
+import axiosInstance from "../axiosapi/axiosInstance";
 
-const API_URL = '/departements';
+const API_URL = "/departements";
 
 // Récupérer tous les départements
 export const getDepartements = async () => {
@@ -8,7 +8,7 @@ export const getDepartements = async () => {
     const response = await axiosInstance.get(API_URL);
     return response.data;
   } catch (error) {
-    console.error('Erreur lors de la récupération des départements:', error);
+    console.error("Erreur lors de la récupération des départements:", error);
     throw error;
   }
 };
@@ -26,21 +26,21 @@ export const addDepartement = async (departement) => {
 
 //ajout de enseigant a un departement
 export const addEnseignant = async (enseignant, departementId) => {
-  console.log(departementId)
-   try {
-     // Ajoutez le departementId directement dans l'URL
-     const response = await axiosInstance.post(
-       `${API_URL}/${departementId}/enseignants`,
-       enseignant
-     );
-     return response.data;
-   } catch (error) {
-     console.error("Erreur lors de l'ajout d'un enseignant:", error);
-     // Ajoutez plus de logs pour comprendre l'erreur
-     console.error('Error details:', error.response?.data);
-     console.error('Error status:', error.response?.status);
-     throw error;
-   }
+  console.log(departementId);
+  try {
+    // Ajoutez le departementId directement dans l'URL
+    const response = await axiosInstance.post(
+      `${API_URL}/${departementId}/enseignants`,
+      enseignant
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de l'ajout d'un enseignant:", error);
+    // Ajoutez plus de logs pour comprendre l'erreur
+    console.error("Error details:", error.response?.data);
+    console.error("Error status:", error.response?.status);
+    throw error;
+  }
 };
 
 // Mettre à jour un département
@@ -60,7 +60,10 @@ export const getDepartementById = async (id) => {
     const response = await axiosInstance.get(`${API_URL}/${id}`);
     return response.data;
   } catch (error) {
-    console.error(`Erreur lors de la récupération du département ${id}:`, error);
+    console.error(
+      `Erreur lors de la récupération du département ${id}:`,
+      error
+    );
     throw error;
   }
 };
@@ -95,10 +98,15 @@ export const getEnseignantsByDepartement = async (departementId) => {
 // Récupérer toutes les options d'un département
 export const getOptionsByDepartement = async (departementId) => {
   try {
-    const response = await axiosInstance.get(`${API_URL}/${departementId}/options`);
+    const response = await axiosInstance.get(
+      `${API_URL}/${departementId}/options`
+    );
     return response.data;
   } catch (error) {
-    console.error(`Erreur lors de la récupération des options du département ${departementId}:`, error);
+    console.error(
+      `Erreur lors de la récupération des options du département ${departementId}:`,
+      error
+    );
     throw error;
   }
 };

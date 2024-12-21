@@ -31,9 +31,23 @@ public class SurveillanceAssignation {
     @JoinColumn(name = "local_id")
     private Local local;
     
-    private String typeSurveillant;// PRINCIPAL ou RESERVISTE
+    @ManyToOne
+    @JoinColumn(name = "departement_id")
+    private Departement departement;
     
-   
+    @ManyToOne
+    @JoinColumn(name = "session_id")
+    private Session session;
+    
+    @ManyToOne
+    @JoinColumn(name = "option_id")
+    private Option option;
+    
+    @ManyToOne
+    @JoinColumn(name = "module_id")
+    private Module module;
+    
+    private String typeSurveillant;
 
 	public Long getId() {
 		return id;
@@ -67,6 +81,38 @@ public class SurveillanceAssignation {
 		this.local = local;
 	}
 
+	public Departement getDepartement() {
+		return departement;
+	}
+
+	public void setDepartement(Departement departement) {
+		this.departement = departement;
+	}
+
+	public Session getSession() {
+		return session;
+	}
+
+	public void setSession(Session session) {
+		this.session = session;
+	}
+
+	public Option getOption() {
+		return option;
+	}
+
+	public void setOption(Option option) {
+		this.option = option;
+	}
+
+	public Module getModule() {
+		return module;
+	}
+
+	public void setModule(Module module) {
+		this.module = module;
+	}
+
 	public String getTypeSurveillant() {
 		return typeSurveillant;
 	}
@@ -74,4 +120,10 @@ public class SurveillanceAssignation {
 	public void setTypeSurveillant(String typeSurveillant) {
 		this.typeSurveillant = typeSurveillant;
 	}
+    
+    
+    
+    
+
+    // Ajoutez les getters et setters pour les nouveaux champs
 }

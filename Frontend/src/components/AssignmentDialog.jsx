@@ -35,10 +35,14 @@ const AssignmentDialog = ({ visible, onHide, exam, onAssign, loading }) => {
             examenId: exam.id,
             enseignantId: exam.enseignant.id,
             localId: selectedLocal,
-            typeSurveillant: typeSurveillant
+            typeSurveillant: typeSurveillant,
+            departementId: exam.departement?.id,
+            sessionId: exam.session?.id,
+            optionId: exam.option?.id,
+            moduleId: exam.moduleExamen?.id
         });
     };
-
+   
     const footer = (
         <div className="flex justify-end gap-2">
             <Button
@@ -72,7 +76,8 @@ const AssignmentDialog = ({ visible, onHide, exam, onAssign, loading }) => {
                     <Card>
                         <div className="mb-4">
                             <h3 className="text-xl font-semibold mb-2">Détails de l'examen</h3>
-                            <p><strong>Module:</strong> {exam.module}</p>
+                            <p><strong>Option:</strong> {exam?.option?.nom || 'Non spécifié'}</p>
+                            <p><strong>Module:</strong> {exam?.moduleExamen?.nom || 'Non spécifié'}</p>
                             <p><strong>Enseignant Responsable:</strong> {exam.enseignant?.nom} {exam.enseignant?.prenom}</p>
                         </div>
 
@@ -121,3 +126,4 @@ const AssignmentDialog = ({ visible, onHide, exam, onAssign, loading }) => {
 };
 
 export default AssignmentDialog;
+

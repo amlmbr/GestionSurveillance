@@ -43,5 +43,22 @@ public interface SurveillanceAssignationRepository extends JpaRepository<Surveil
     	       "THEN sa.examen.horaire IN ('start1-end1', 'start2-end2') " +
     	       "ELSE sa.examen.horaire IN ('start3-end3', 'start4-end4') END)")
     	List<Enseignant> findEnseignantsDisponiblesPourSurveillance(Long departementId, LocalDate date, String periode);
+    
+    
+    @Query("SELECT sa FROM SurveillanceAssignation sa WHERE sa.examen.date = :date")
+    List<SurveillanceAssignation> findByDate(LocalDate date);
+
+    @Query("SELECT sa FROM SurveillanceAssignation sa WHERE sa.session.id = :sessionId AND sa.departement.id = :departementId")
+    List<SurveillanceAssignation> findBySessionAndDepartement(Long sessionId, Long departementId);
+
+    List<SurveillanceAssignation> findAll();
+    @Query("SELECT sa FROM SurveillanceAssignation sa WHERE sa.examen.id = :examenId")
+    List<SurveillanceAssignation> findByExamenId(Long examenId);
+    
+    
+    List<SurveillanceAssignation> findBySessionId(Long sessionId);
+
+    List<SurveillanceAssignation> findByDepartementId(Long departementId);
+
 
 }
