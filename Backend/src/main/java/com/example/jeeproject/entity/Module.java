@@ -34,6 +34,47 @@ public class Module {
     //@JsonManagedReference("module-option")
     @JsonBackReference("module-option")  // Changé en JsonBackReference
     private Option option;
+
+
+	public Long getId() {
+		return id;
+	}
+
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+
+	public String getNom() {
+		return nom;
+	}
+
+
+	public void setNom(String nom) {
+		this.nom = nom;
+	}
+
+
+	public Enseignant getResponsable() {
+		return responsable;
+	}
+
+
+	public void setResponsable(Enseignant responsable) {
+		this.responsable = responsable;
+	}
+
+
+	public Option getOption() {
+		return option;
+	}
+
+
+	public void setOption(Option option) {
+		this.option = option;
+	}
+    
     
     
 }

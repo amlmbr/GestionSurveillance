@@ -47,39 +47,30 @@ const SurveillanceService = {
 
   getSurveillanceAssignments: async (sessionId, departementId) => {
     try {
-      // Appel à l'API pour récupérer les données
       const response = await axiosInstance.get("/api/surveillance/emploi", {
         params: { sessionId, departementId },
       });
 
-      const assignments = {}; // Objet pour stocker les assignations
+      const assignments = {};
 
       if (response.data && Array.isArray(response.data)) {
         response.data.forEach((jour) => {
-          // Vérifier si les horaires existent
           if (jour.horaires) {
-            Object.entries(jour.horaires).forEach(([horaire, examens]) => {
-              if (Array.isArray(examens)) {
-                examens.forEach((examenData) => {
-                  const examen = examenData.examen;
-                  if (examen?.surveillanceAssignations) {
-                    examen.surveillanceAssignations.forEach((surveillance) => {
-                      const key = `${jour.date}_${horaire}`;
-
-                      // Initialiser la clé si elle n'existe pas
-                      if (!assignments[key]) {
-                        assignments[key] = [];
-                      }
-
-                      // Ajouter les détails de surveillance
-                      assignments[key].push({
-                        local: surveillance.local?.nom || "Non spécifié",
-                        typeSurveillant:
-                          surveillance.typeSurveillant || "Non spécifié",
-                        enseignant: `${
-                          surveillance.enseignant?.nom || "Inconnu"
-                        } ${surveillance.enseignant?.prenom || ""}`,
-                      });
+            Object.entries(jour.horaires).forEach(([horaire, surveillants]) => {
+              if (Array.isArray(surveillants)) {
+                surveillants.forEach((surveillant) => {
+                  if (surveillant.enseignant && surveillant.local) {
+                    const key = `${jour.date}_${horaire}`;
+                    if (!assignments[key]) {
+                      assignments[key] = [];
+                    }
+                    assignments[key].push({
+                      local: surveillant.local.nom || "Non spécifié",
+                      typeSurveillant:
+                        surveillant.typeSurveillant || "Non spécifié",
+                      enseignant: `${surveillant.enseignant.nom || ""} ${
+                        surveillant.enseignant.prenom || ""
+                      }`,
                     });
                   }
                 });
@@ -87,20 +78,14 @@ const SurveillanceService = {
             });
           }
         });
-      } else {
-        console.error("Format inattendu des données :", response.data);
       }
 
       return assignments;
     } catch (error) {
-      // Gestion améliorée des erreurs
-      console.error(
-        "Erreur lors de la récupération des assignations:",
-        error.response?.data?.message || error.message
-      );
+      console.error("Erreur dans getSurveillanceAssignments:", error);
       throw new Error(
         error.response?.data?.message ||
-          "Une erreur s'est produite lors de la récupération des assignations."
+          "Erreur lors de la récupération des assignations"
       );
     }
   },

@@ -94,31 +94,28 @@ const SurveillanceComponent = ({ sessionId }) => {
         }
     };
     const loadSurveillanceAssignments = async () => {
+        if (!sessionId || !selectedDepartement) return;
+        
         try {
+            setLoading(true);
             const assignments = await SurveillanceService.getSurveillanceAssignments(sessionId, selectedDepartement);
-            
-            // Create a map of assignments using date_horaire as ke
-            const assignmentsMap = {};
-assignments.forEach(assignment => {
-    const key = `${assignment.date}_${assignment.horaire}`;
-    assignmentsMap[key] = {
-        local: assignment.local.nom, // Utilisez directement le nom du local
-        typeSurveillant: assignment.typeSurveillant,
-        enseignant: `${assignment.enseignant.nom} ${assignment.enseignant.prenom}` // Ajoutez le nom de l'enseignant
-    };
-});
-            
-            setSurveillanceAssignments(assignmentsMap);
+            setSurveillanceAssignments(assignments);
         } catch (error) {
-            showError('Erreur lors du chargement des assignations de surveillance');
+            console.error('Erreur de chargement des assignations:', error);
+            toast.current?.show({
+                severity: 'error',
+                summary: 'Erreur',
+                detail: 'Erreur lors du chargement des assignations de surveillance. Veuillez réessayer.',
+                life: 5000
+            });
+        } finally {
+            setLoading(false);
         }
     };
-
+    
     useEffect(() => {
-        if (selectedDepartement) {
-            loadSurveillanceAssignments();
-        }
-    }, [selectedDepartement]);
+        loadSurveillanceAssignments();
+    }, [selectedDepartement, sessionId]);
 
     const handleCellClick = async (date, horaire, enseignantId) => {
         setLoadingCell({ date, horaire });
@@ -226,15 +223,17 @@ assignments.forEach(assignment => {
     }, [enseignants, session, horaires]);
 
 
-    const handleAssignSurveillant = async (exam, enseignantId) => {
+    const handleAssignSurveillant = (exam) => {
         if (!exam) {
             console.error("Aucun examen sélectionné");
             return;
         }
-    
+        
+        // On stocke l'examen sélectionné
         setSelectedExam(exam);
         setAssignmentDialogVisible(true);
     };
+    
     
     const handleAssignment = async (assignmentData) => {
         try {
@@ -277,7 +276,7 @@ assignments.forEach(assignment => {
         }
     };
     
-    const renderCellContent = (date, horaire, enseignantId) => {
+   /* const renderCellContent = (date, horaire, enseignantId) => {
         const key = `${date}_${horaire}`;
         const assignment = surveillanceAssignments[key];
     
@@ -295,34 +294,49 @@ assignments.forEach(assignment => {
                 onClick={() => handleCellClick(date, horaire, enseignantId)} // Passez l'ID de l'enseignant ici
             />
         );
-    };
-    const renderSurveillanceCell = (rowData, field) => {
-        const { date, horaire } = rowData[field];
+    };*/
+    const renderCellContent = (rowData, field) => {
+        // First check if the field exists and has the required properties
+        if (!rowData[field] || !field) {
+            return null;
+        }
+
+        const date = rowData[field].date;
+        const horaire = rowData[field].horaire;
+
+        // Check if we have valid date and horaire
+        if (!date || !horaire) {
+            return null;
+        }
+
         const key = `${date}_${horaire}`;
-        const assignment = surveillanceAssignments[key];
+        const assignmentsList = surveillanceAssignments[key];
     
-        if (assignment) {
-            // Si une assignation existe, afficher les détails
+        if (assignmentsList && assignmentsList.length > 0) {
             return (
                 <div style={{ textAlign: 'center', fontSize: '14px' }}>
-                    <span><strong>Local:</strong> {assignment.local}</span><br />
-                    <span><strong>Type:</strong> {assignment.typeSurveillant}</span>
+                    {assignmentsList.map((assignment, index) => (
+                        <div key={index} className="mb-2">
+                            <span><strong>Local:</strong> {assignment.local}</span><br />
+                            <span><strong>Type:</strong> {assignment.typeSurveillant}</span>
+                        </div>
+                    ))}
                 </div>
             );
         } else if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
-            // Afficher un spinner si la cellule est en chargement
             return <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
         } else {
-            // Sinon, afficher le bouton "Assigner"
             return (
                 <Button
                     label="Assigner"
                     className="p-button-text"
-                    onClick={() => handleCellClick(date, horaire, rowData.enseignantId)} // Passez l'ID de l'enseignant ici
+                    onClick={() => handleCellClick(date, horaire)}
                 />
             );
         }
     };
+
+
 
     const handleExportSurveillances = async () => {
         try {
@@ -557,18 +571,11 @@ assignments.forEach(assignment => {
                                 const [date, horaire] = key.split('_');
                                 return (
                                     <Column
-                                        style={{ textAlign: 'center', width: '120px' }}
-                                        body={(rowData) => {
-                                            const cellData = rowData[`${date}_${horaire}`];
-                                            return (
-                                                <div
-                                                    className="cursor-pointer flex align-items-center justify-content-center"
-                                                >
-                                                    {renderCellContent(cellData.date, cellData.horaire, rowData.enseignantId)} 
-                                                </div>
-                                            );
-                                        }}
-                                    />
+                                    key={key}
+                                    field={key}
+                                    style={{ textAlign: 'center', width: '120px' }}
+                                    body={(rowData) => renderCellContent(rowData, key)}
+                                />
                                 );
                             })}
                         </DataTable>
@@ -602,7 +609,7 @@ assignments.forEach(assignment => {
     body={(rowData) => (
         <div className="flex flex-col">
             <div className="text-sm text-gray-600">
-                 {rowData.option?.nom}
+                 {rowData.optionInfo?.nom || 'Non spécifié'}
             </div>
         </div>
     )}

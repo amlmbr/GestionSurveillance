@@ -43,10 +43,18 @@ public class SurveillanceController {
 
     @GetMapping("/examens")
     public ResponseEntity getExamens(
-            @RequestParam LocalDate date,
-            @RequestParam String horaire,
-            @RequestParam Long sessionId) {
-        return ResponseEntity.ok(surveillanceService.getExamensByDateAndHoraire(date, horaire, sessionId));
+        @RequestParam LocalDate date,
+        @RequestParam String horaire,
+        @RequestParam Long sessionId) {
+        List<Examen> examens = surveillanceService.getExamensByDateAndHoraire(date, horaire, sessionId);
+        // Vérifier que toutes les relations sont chargées
+        examens.forEach(examen -> {
+            examen.getDepartement();
+            examen.getSession();
+            examen.getOption();
+            examen.getModuleExamen();
+        });
+        return ResponseEntity.ok(examens);
     }
 
     @GetMapping("/enseignants-disponibles")

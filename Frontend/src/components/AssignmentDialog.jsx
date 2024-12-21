@@ -25,23 +25,39 @@ const AssignmentDialog = ({ visible, onHide,selectedEnseignantId, exam, onAssign
             return;
         }
     
-        if (!exam || !exam.enseignant?.id) {
-            setFormError("Données de l'examen incomplètes.");
+        // Vérification complète des données requises
+        if (!exam || !exam.id || !selectedEnseignantId || !exam.departement?.id || 
+            !exam.session?.id || !exam.option?.id || !exam.moduleExamen?.id) {
+            setFormError("Données de l'examen incomplètes");
+            console.error("Données manquantes:", {
+                examenId: exam?.id,
+                enseignantId: selectedEnseignantId,
+                departementId: exam?.departement?.id,
+                sessionId: exam?.session?.id,
+                optionId: exam?.option?.id,
+                moduleId: exam?.moduleExamen?.id
+            });
             return;
         }
     
-        // Transmet les données d'assignation dans le format attendu
-        onAssign({
+        // Construction de l'objet d'assignation avec tous les IDs requis
+        const assignmentData = {
             examenId: exam.id,
             enseignantId: selectedEnseignantId,
             localId: selectedLocal,
             typeSurveillant: typeSurveillant,
-            departementId: exam.departement?.id,
-            sessionId: exam.session?.id,
-            optionId: exam.option?.id,
-            moduleId: exam.moduleExamen?.id
-        });
+            departementId: exam.departement.id,
+            sessionId: exam.session.id,
+            optionId: exam.option.id,
+            moduleId: exam.moduleExamen.id
+        };
+    
+        // Log des données avant l'envoi
+        console.log("Données d'assignation:", assignmentData);
+    
+        onAssign(assignmentData);
     };
+   
    
     const footer = (
         <div className="flex justify-end gap-2">
