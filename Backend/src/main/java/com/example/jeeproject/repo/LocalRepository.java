@@ -17,4 +17,5 @@ public interface LocalRepository extends JpaRepository<Local, Long> {
            "AND l.id NOT IN (SELECT sa.local.id FROM SurveillanceAssignation sa " +
            "WHERE sa.examen.date = :date AND sa.examen.horaire = :horaire)")
     List<Local> findLocauxDisponibles(LocalDate date, String horaire);
+    Local findLocalByNom(String nom);
 }

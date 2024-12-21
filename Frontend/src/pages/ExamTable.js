@@ -769,18 +769,32 @@ const ExamTable = ({ sessionId }) => {
   </div>
 
   <div className="select-section mt-4">
-    <MultiSelect
-      value={newExam.locaux}
-      options={locaux}
-      onChange={(e) => {
-        setNewExam({ ...newExam, locaux: e.value })
-      }}
-      optionLabel="nom"
-      placeholder="Sélectionner un ou plusieurs locaux"
-      className={`custom-multiselect ${autolocal ? 'disabled' : ''}`}
-      display="chip"
-      disabled={autolocal}
-    />
+  <MultiSelect
+  value={newExam.locaux}
+  options={locaux}
+  filter
+  onChange={(e) => {
+    setNewExam({ ...newExam, locaux: e.value });
+  }}
+  optionLabel="nom"
+  placeholder="Sélectionner un ou plusieurs locaux"
+  className={`custom-multiselect ${autolocal ? 'disabled' : ''}`}
+  display="chip"
+  disabled={autolocal}
+  itemTemplate={(option) => (
+    <div className="flex align-items-center">
+      <span>{option.nom}</span>
+      <span className="ml-2 text-gray-500">({option.capacite} places)</span>
+    </div>
+  )}
+  chipTemplate={(option) => (
+    <div className="flex align-items-center">
+      <span>{option.nom}</span>
+      <span className="ml-2 text-gray-500">({option.capacite} places)</span>
+    </div>
+  )}
+/>
+
   </div>
 </div>
 <style jsx>{`

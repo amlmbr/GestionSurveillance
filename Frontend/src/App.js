@@ -34,11 +34,10 @@ function LayoutWithSidebar({ children }) {
   const [isMobile, setIsMobile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [activeLabel, setActiveLabel] = useState("Tableau de bord");
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
-      // Ne plus setter collapsed automatiquement avec la taille de l'écran
-      // pour permettre le contrôle manuel
       if (window.innerWidth < 768) {
         setCollapsed(false);
       }
@@ -75,7 +74,7 @@ function LayoutWithSidebar({ children }) {
       label: 'Modules',
       icon: 'pi pi-book',
     },
-     {
+    {
       path: '/option',
       label: 'Options',
       icon: 'pi pi-book',
@@ -110,7 +109,6 @@ function LayoutWithSidebar({ children }) {
   return (
     <div style={{ display: "flex", height: "100vh", position: "relative" }}>
       {isMobile ? (
-        // Bouton hamburger pour mobile
         <button
           onClick={() => setShowSidebar(!showSidebar)}
           style={{
@@ -130,7 +128,6 @@ function LayoutWithSidebar({ children }) {
           <i className={`pi ${showSidebar ? "pi-times" : "pi-bars"}`} />
         </button>
       ) : (
-        // Bouton de toggle pour desktop
         <button
           onClick={() => setCollapsed(!collapsed)}
           style={{
@@ -172,11 +169,12 @@ function LayoutWithSidebar({ children }) {
             height: "100%",
             transition: "all 0.3s ease",
             zIndex: 999,
+            overflowY: "auto", // Ajouter une barre de défilement
           },
         }}
       >
         <img
-          src="/ucd.png" // Chemin direct depuis le dossier public
+          src="/ucd.png"
           alt="Logo ENSAJ"
           style={{
             width: collapsed && !isMobile ? "60px" : "190px",
@@ -207,7 +205,7 @@ function LayoutWithSidebar({ children }) {
               textOverflow: "ellipsis",
             }}
           >
-            {collapsed && !isMobile ? "GL" : "Gestion Locaux"}
+            {collapsed && !isMobile ? "AD" : "Admin"}
           </h1>
         </div>
 
@@ -262,17 +260,17 @@ function LayoutWithSidebar({ children }) {
 
         <div
           style={{
-            position: "absolute",
+            position: "sticky",
             bottom: "20px",
             width: "100%",
             padding: "0 16px",
+            backgroundColor: "#27337e", // Fond pour éviter le chevauchement
           }}
         >
           <button
             onClick={() => {
               localStorage.removeItem("access_token");
               localStorage.clear();
-
               navigate("/");
             }}
             style={{
@@ -315,8 +313,6 @@ function LayoutWithSidebar({ children }) {
   );
 }
 
-// Le reste du code reste inchangé...
-
 function AppContent() {
   const location = useLocation();
   const noSidebarPaths = ["/", "/bonjour", "/reset-password", "/verifycode"];
@@ -348,7 +344,6 @@ function AppContent() {
       ) : (
         <Routes>
           <Route path="/bonjour" element={<BonjourPage />} />
-
           <Route path="/" element={<LoginComp />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verifycode" element={<VerifyCodePage />} />

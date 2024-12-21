@@ -48,6 +48,10 @@ public class ModuleService {
     }
 
     public Module createModule(Module module) {
+
+        if(moduleRepository.findModuleByNom(module.getNom()) != null) {
+            return  null;
+        }
         return moduleRepository.save(module);
     }
 

@@ -50,7 +50,10 @@ public class OptionService {
     }
 
     public Option createOption(Option option) {
-        return optionRepository.save(option);
+        if(optionRepository.findOptionByNom(option.getNom()) == null) {
+            return optionRepository.save(option);
+        }
+      return  null;
     }
 
     public Option updateOption(Long id, Option optionDetails) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
@@ -31,7 +31,54 @@ const LocalList = () => {
     nbSurveillants: 0,
     estDisponible: false,
   });
+   // Fonction pour déclencher le clic sur l'input file
+   const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+  const fileInputRef = useRef(null);
+   const handleCsvImport = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const text = e.target.result;
+          const lines = text.split("\n");
+          const headers = lines[0].split(",");
+          const data = [];
+  
+          for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim() === "") continue;
+  
+            const values = lines[i].split(",");
+            const entry = {};
+            headers.forEach((header, index) => {
+              entry[header.trim()] = values[index]?.trim(); // Vérifie si la valeur existe
+            });
+            data.push(entry);
+          }
+  
+          try {
 
+            
+            const promises = data.map((local) =>
+              addLocal(local)
+            );
+            await Promise.all(promises);
+            console.log("Tous les locaaux ont été ajoutés avec succès.");
+           loadLocaux();
+          } catch (error) {
+            console.error(
+              "Une ou plusieurs erreurs sont survenues lors de l'ajout des locaux:",
+              error
+            );
+          }
+        };
+        reader.readAsText(file);
+      }
+  
+      // Réinitialise la valeur de l'input pour permettre une nouvelle sélection
+      event.target.value = "";
+    };
   const typeOptions = [
     { label: 'Amphithéâtre', value: 'Amphithéâtre' },
     { label: 'Salle', value: 'Salle' },
@@ -181,30 +228,45 @@ const LocalList = () => {
         >
           <h2 className="m-0">Liste des Locaux</h2>
         </div>
-        <div
-          className="flex align-items-center mt-3"
-          style={{ position: 'relative' }}
-        >
-          <span className="p-input-icon-left">
-            <i className="pi pi-search" style={{ left: '0.75rem' }} />
-            <InputText
-              value={globalFilterValue}
-              onChange={(e) => setGlobalFilterValue(e.target.value)}
-              placeholder="Rechercher..."
-              style={{ paddingLeft: '2.5rem' }}
-              className="p-inputtext-lg"
-            />
-          </span>
-          <Button
-            label="Ajouter un Local"
-            icon="pi pi-plus"
-            severity="success"
-            className="p-button-raised flex align-items-center gap-2"
-            style={{ position: 'absolute', right: '0' }}
-            onClick={() => handleOpenModal('add')}
-          >
-          </Button>
-        </div>
+      <div
+              className="flex justify-content-between align-items-center mt-3"
+              style={{ display: "flex", alignItems: "center", gap: "1rem" }}
+            >
+              {/* Input de recherche */}
+              <span className="p-input-icon-left" style={{ flex: 1 }}>
+                <i className="pi pi-search" style={{ left: "0.75rem" }} />
+                <InputText
+                  value={globalFilterValue}
+                  onChange={(e) => setGlobalFilterValue(e.target.value)}
+                  placeholder="Rechercher..."
+                  style={{ paddingLeft: "2.5rem", width: "100%" }}
+                  className="p-inputtext-lg"
+                />
+              </span>
+              {/* Bouton d'import CSV */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleCsvImport}
+                accept=".csv"
+                style={{ display: "none" }}
+              />
+              <Button
+                label="Importer CSV"
+                icon="pi pi-upload"
+                severity="info"
+                className="p-button-raised"
+                onClick={triggerFileInput}
+              />
+              {/* Bouton Ajouter un Département */}
+              <Button
+                label="Ajouter un Local"
+                icon="pi pi-plus"
+                severity="success"
+                className="p-button-raised"
+                onClick={() => handleOpenModal("add")}
+              />
+            </div>
       </div>
     );
   };

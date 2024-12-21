@@ -37,7 +37,7 @@ public class EnseignantServiceImpl implements EnseignantService {
     public Enseignant createEnseignant(Enseignant enseignant) {
         // Vérifier si l'email existe déjà
         if (enseignantRepository.findByEmail(enseignant.getEmail()).isPresent()) {
-            throw new RuntimeException("Un enseignant avec cet email existe déjà");
+            return null;
         }
      // Définir les valeurs par défaut
         enseignant.setNbSurveillances(0);

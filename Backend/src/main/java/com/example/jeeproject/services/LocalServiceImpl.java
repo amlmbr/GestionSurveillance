@@ -31,7 +31,10 @@ public class LocalServiceImpl implements LocalService {
     }
     @Override
     public Local createLocal(Local local) {
+
+        if(localRepository.findLocalByNom(local.getNom()) == null)
         return localRepository.save(local);
+        return null;
     }
 
     @Override
