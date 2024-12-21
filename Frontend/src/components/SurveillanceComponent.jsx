@@ -35,6 +35,8 @@ const SurveillanceComponent = ({ sessionId }) => {
         selectedCell: null,
         showDialog: false,
     });
+    const [selectedEnseignantId, setSelectedEnseignantId] = useState(null);
+
     const [refreshKey, setRefreshKey] = useState(0);
     const [assignmentDialogVisible, setAssignmentDialogVisible] = useState(false);
     const [selectedExam, setSelectedExam] = useState(null);
@@ -118,8 +120,10 @@ assignments.forEach(assignment => {
         }
     }, [selectedDepartement]);
 
-    const handleCellClick = async (date, horaire) => {
+    const handleCellClick = async (date, horaire, enseignantId) => {
         setLoadingCell({ date, horaire });
+        setSelectedEnseignantId(enseignantId)
+        console.log('Enseignant ID:', enseignantId); // Afficher l'ID de l'enseignant
         try {
             const exams = await ExamService.getExams(sessionId, date, horaire);
             setSelectedCell({ date, horaire, exams });
@@ -222,8 +226,7 @@ assignments.forEach(assignment => {
     }, [enseignants, session, horaires]);
 
 
-    
-      const handleAssignSurveillant = async (exam) => {
+    const handleAssignSurveillant = async (exam, enseignantId) => {
         if (!exam) {
             console.error("Aucun examen sélectionné");
             return;
@@ -274,10 +277,10 @@ assignments.forEach(assignment => {
         }
     };
     
-    const renderCellContent = (date, horaire) => {
+    const renderCellContent = (date, horaire, enseignantId) => {
         const key = `${date}_${horaire}`;
         const assignment = surveillanceAssignments[key];
-        
+    
         if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
             return (
                 <div className="flex justify-center items-center">
@@ -287,9 +290,9 @@ assignments.forEach(assignment => {
         }
     
         return (
-            <SurveillanceCell 
+            <SurveillanceCell
                 assignment={assignment}
-                onClick={() => handleCellClick(date, horaire)}
+                onClick={() => handleCellClick(date, horaire, enseignantId)} // Passez l'ID de l'enseignant ici
             />
         );
     };
@@ -315,12 +318,11 @@ assignments.forEach(assignment => {
                 <Button
                     label="Assigner"
                     className="p-button-text"
-                    onClick={() => handleCellClick(date, horaire)}
+                    onClick={() => handleCellClick(date, horaire, rowData.enseignantId)} // Passez l'ID de l'enseignant ici
                 />
             );
         }
     };
-    
 
     const handleExportSurveillances = async () => {
         try {
@@ -537,24 +539,24 @@ assignments.forEach(assignment => {
                             </div>
                         ) : (
                             <DataTable
-                                key={refreshKey}
-                                value={tableData}
-                                responsiveLayout="scroll"
-                                showGridlines
-                                headerColumnGroup={headerGroup}
-                                className="p-datatable-sm"
-                            >
-                                <Column 
-                                    field="enseignant" 
-                                    header="Enseignants" 
-                                    frozen 
-                                    style={{ width: '200px' }} 
-                                />
-                                {tableData[0] && Object.keys(tableData[0]).map(key => {
-                                    if (key === 'enseignant' || key === 'enseignantId') return null;
-                                    const [date, horaire] = key.split('_');
-                                    return (
-                                        <Column
+                            key={refreshKey}
+                            value={tableData}
+                            responsiveLayout="scroll"
+                            showGridlines
+                            headerColumnGroup={headerGroup}
+                            className="p-datatable-sm"
+                        >
+                            <Column
+                                field="enseignant"
+                                header="Enseignants"
+                                frozen
+                                style={{ width: '200px' }}
+                            />
+                            {tableData[0] && Object.keys(tableData[0]).map(key => {
+                                if (key === 'enseignant' || key === 'enseignantId') return null;
+                                const [date, horaire] = key.split('_');
+                                return (
+                                    <Column
                                         style={{ textAlign: 'center', width: '120px' }}
                                         body={(rowData) => {
                                             const cellData = rowData[`${date}_${horaire}`];
@@ -562,14 +564,14 @@ assignments.forEach(assignment => {
                                                 <div
                                                     className="cursor-pointer flex align-items-center justify-content-center"
                                                 >
-                                                    {renderCellContent(cellData.date, cellData.horaire)}
+                                                    {renderCellContent(cellData.date, cellData.horaire, rowData.enseignantId)} 
                                                 </div>
                                             );
                                         }}
                                     />
-                                    );
-                                })}
-                            </DataTable>
+                                );
+                            })}
+                        </DataTable>
                         )}
                     </Card>
                 </div>
@@ -636,7 +638,7 @@ assignments.forEach(assignment => {
                                     icon="pi pi-user-plus"
                                     className="p-button-rounded p-button-success p-button-text"
                                     tooltip="Assigner comme surveillant"
-                                    onClick={() => handleAssignSurveillant(data)}  // on utilise data au lieu de rowData
+                                    onClick={() => handleAssignSurveillant(data, data)}  // on utilise data au lieu de rowData
                                 />
                             </div>
                         )}
@@ -650,10 +652,12 @@ assignments.forEach(assignment => {
                     <Message severity="info" text="Aucun examen programmé" className="w-full" />
                 )}
             </Dialog>
+          
             <AssignmentDialog
   visible={assignmentDialogVisible}
   onHide={() => setAssignmentDialogVisible(false)}
   exam={selectedExam}
+  selectedEnseignantId={selectedEnseignantId} // Passer l'ID de l'enseignant ici
   onAssign={handleAssignment}
   loading={loading}
 />

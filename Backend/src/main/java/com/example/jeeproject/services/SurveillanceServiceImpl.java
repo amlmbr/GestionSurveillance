@@ -25,58 +25,56 @@ public class SurveillanceServiceImpl implements SurveillanceService {
 
     @Override
     public List<Map<String, Object>> getEmploiSurveillance(Long sessionId, Long departementId) {
-        // Récupérer la session
-        Session session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+            // Récupérer la session
+            Session session = sessionRepository.findById(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Session non trouvée"));
 
-        LocalDate currentDate = session.getDateDebut();
-        LocalDate endDate = session.getDateFin();
-        List<Map<String, Object>> emploi = new ArrayList<>();
+            LocalDate currentDate = session.getDateDebut();
+            LocalDate endDate = session.getDateFin();
+            List<Map<String, Object>> emploi = new ArrayList<>();
 
-        while (!currentDate.isAfter(endDate)) {
-            Map<String, Object> dayData = new HashMap<>();
-            dayData.put("date", currentDate);
+            while (!currentDate.isAfter(endDate)) {
+                Map<String, Object> dayData = new HashMap<>();
+                dayData.put("date", currentDate);
 
-            Map<String, List<Map<String, Object>>> horaires = new HashMap<>();
-            String[] slots = {"08:00-10:00", "10:30-12:30", "14:00-16:00", "16:30-18:30"};
+                Map<String, List<Map<String, Object>>> horaires = new HashMap<>();
+                String[] slots = {"09:00-10:00", "10:00-12:00", "14:00-16:00", "16:00-18:00"};
+                for (String slot : slots) {
+                    List<Examen> examens = examenRepository.findByDateAndHoraireAndSessionAndDepartement(
+                            currentDate, slot, sessionId, departementId);
 
-            for (String slot : slots) {
-                List<Examen> examens = examenRepository.findByDateAndHoraireAndSessionAndDepartement(
-                        currentDate, slot, sessionId, departementId);
-                List<Local> locauxDisponibles = localRepository.findLocauxDisponibles(currentDate, slot);
+                    List<Map<String, Object>> surveillantsParSlot = new ArrayList<>();
 
-                List<Map<String, Object>> slotData = new ArrayList<>();
-                for (Examen examen : examens) {
-                    Map<String, Object> examenData = new HashMap<>();
-                    examenData.put("examen", examen);
-                    examenData.put("locauxDisponibles", locauxDisponibles);
+                    for (Examen examen : examens) {
+                        List<SurveillanceAssignation> assignations = surveillanceAssignationRepository.findByExamenId(examen.getId());
+                        for (SurveillanceAssignation assignation : assignations) {
+                            Map<String, Object> surveillantData = new HashMap<>();
+                            surveillantData.put("enseignant", assignation.getEnseignant());
+                            surveillantData.put("typeSurveillant", assignation.getTypeSurveillant());
 
-                    List<Map<String, Object>> surveillants = new ArrayList<>();
-                    List<SurveillanceAssignation> assignations = surveillanceAssignationRepository.findByExamenId(examen.getId());
-                    for (SurveillanceAssignation assignation : assignations) {
-                        Map<String, Object> surveillantData = new HashMap<>();
-                        surveillantData.put("enseignant", assignation.getEnseignant());
-                        surveillantData.put("typeSurveillant", assignation.getTypeSurveillant());
-                        surveillants.add(surveillantData);
+                            // Récupérer le local assigné au surveillant pour cet examen
+                            Local localAssigne = assignation.getLocal();
+                            surveillantData.put("local", localAssigne);
+
+                            surveillantsParSlot.add(surveillantData);
+                        }
                     }
 
-                    examenData.put("surveillants", surveillants);
-                    slotData.add(examenData);
+                    horaires.put(slot, surveillantsParSlot);
                 }
 
-                horaires.put(slot, slotData);
+                dayData.put("horaires", horaires);
+                emploi.add(dayData);
+                currentDate = currentDate.plusDays(1);
             }
 
-            dayData.put("horaires", horaires);
-            emploi.add(dayData);
-            currentDate = currentDate.plusDays(1);
+            return emploi;
         }
 
-        return emploi;
-    }
 
 
-    @Override
+
+        @Override
     public List<Examen> getExamensByDateAndHoraire(LocalDate date, String horaire, Long sessionId) {
         return examenRepository.findBySessionIdAndDateAndHoraire(sessionId, date, horaire);
     }

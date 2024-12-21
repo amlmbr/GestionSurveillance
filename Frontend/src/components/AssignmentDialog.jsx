@@ -6,7 +6,7 @@ import { Card } from 'primereact/card';
 import { Dropdown } from 'primereact/dropdown';
 import { Message } from 'primereact/message';
 
-const AssignmentDialog = ({ visible, onHide, exam, onAssign, loading }) => {
+const AssignmentDialog = ({ visible, onHide,selectedEnseignantId, exam, onAssign, loading }) => {
     const [selectedLocal, setSelectedLocal] = useState(null);
     const [typeSurveillant, setTypeSurveillant] = useState("PRINCIPAL");
     const [formError, setFormError] = useState("");
@@ -33,7 +33,7 @@ const AssignmentDialog = ({ visible, onHide, exam, onAssign, loading }) => {
         // Transmet les données d'assignation dans le format attendu
         onAssign({
             examenId: exam.id,
-            enseignantId: exam.enseignant.id,
+            enseignantId: selectedEnseignantId,
             localId: selectedLocal,
             typeSurveillant: typeSurveillant,
             departementId: exam.departement?.id,
