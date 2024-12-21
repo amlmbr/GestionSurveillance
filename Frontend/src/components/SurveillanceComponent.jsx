@@ -347,108 +347,98 @@ const SurveillanceComponent = ({ sessionId }) => {
         try {
             setLoading(true);
     
-            // Récupérer les données de surveillance depuis le backend
+            // Get surveillance data and assignments
             const surveillanceData = await SurveillanceService.getEmploiSurveillance(sessionId, selectedDepartement);
     
-            // Construire les colonnes dynamiquement avec regroupement "Matin" et "Après-midi"
+            // Build the table headers
             const headers = ["Enseignants"];
             const dateColumns = [];
     
+            // Organize dates and time slots
             surveillanceData.forEach((jour) => {
-                const heuresMatin = [];
-                const heuresApresMidi = [];
-    
                 Object.keys(jour.horaires).forEach((horaire) => {
                     const [startHour] = horaire.split("-").map((h) => parseInt(h.split(":")[0], 10));
-                    if (startHour < 12) {
-                        heuresMatin.push(horaire);
-                    } else {
-                        heuresApresMidi.push(horaire);
-                    }
-                });
-    
-                // Trier les heures
-                const heuresTrieesMatin = heuresMatin.sort((a, b) => a.localeCompare(b));
-                const heuresTrieesApresMidi = heuresApresMidi.sort((a, b) => a.localeCompare(b));
-    
-                // Ajouter les colonnes "Matin" et "Après-midi" avec leurs heures
-                heuresTrieesMatin.forEach((horaire) => {
-                    const columnKey = `Matin ${jour.date} ${horaire}`;
+                    const periode = startHour < 12 ? "Matin" : "Après-midi";
+                    const columnKey = `${periode} ${jour.date} ${horaire}`;
                     headers.push(columnKey);
-                    dateColumns.push({ date: jour.date, horaire, periode: "Matin" });
-                });
-    
-                heuresTrieesApresMidi.forEach((horaire) => {
-                    const columnKey = `Après-midi ${jour.date} ${horaire}`;
-                    headers.push(columnKey);
-                    dateColumns.push({ date: jour.date, horaire, periode: "Après-midi" });
+                    dateColumns.push({ date: jour.date, horaire });
                 });
             });
     
-            // Préparer les données des enseignants
+            // Prepare teachers data with assignments
             const enseignantsData = enseignants.map((enseignant) => {
                 const rowData = {
-                    "Enseignants": `${enseignant.nom} ${enseignant.prenom}`,
+                    "Enseignants": `${enseignant.nom} ${enseignant.prenom}`
                 };
     
-                // Pour chaque combinaison date/heure/période, vérifier l'affectation
-                dateColumns.forEach(({ date, horaire, periode }) => {
-                    const examens = surveillanceData.find((jour) => jour.date === date)?.horaires[horaire] || [];
-                    const assignments = examens.flatMap((examen) => examen.surveillants || []);
-                    const assigned = assignments.find(
-                        (assignment) =>
-                            `${assignment.enseignant.nom} ${assignment.enseignant.prenom}` ===
-                            `${enseignant.nom} ${enseignant.prenom}`
+                // For each date/time column
+                dateColumns.forEach(({ date, horaire }) => {
+                    const key = `${date}_${horaire}`;
+                    const assignmentsList = surveillanceAssignments[key];
+                    
+                    // Find assignment for current teacher
+                    const teacherAssignment = assignmentsList?.find(
+                        assignment => assignment.enseignant === `${enseignant.nom} ${enseignant.prenom}`
                     );
     
-                    rowData[`${periode} ${date} ${horaire}`] = assigned
-                        ? `${assigned.local} (${assigned.typeSurveillant})`
-                        : "Non assigné";
+                    // Build column key
+                    const [startHour] = horaire.split("-").map((h) => parseInt(h.split(":")[0], 10));
+                    const periode = startHour < 12 ? "Matin" : "Après-midi";
+                    const columnKey = `${periode} ${date} ${horaire}`;
+    
+                    // Set cell value based on assignment
+                    if (teacherAssignment) {
+                        rowData[columnKey] = `Local: ${teacherAssignment.local}\nType: ${teacherAssignment.typeSurveillant}`;
+                    } else {
+                        rowData[columnKey] = "Non assigné";
+                    }
                 });
     
                 return rowData;
             });
     
-            // Générer une feuille Excel à partir des données
+            // Create Excel worksheet
             const ws = XLSX.utils.json_to_sheet(enseignantsData, { header: headers });
     
-            // Ajuster les largeurs des colonnes
-            ws["!cols"] = headers.map((_, index) => ({
-                wch: index === 0 ? 25 : 20, // Colonne Enseignants plus large
-            }));
+            // Adjust column widths
+            const colWidths = headers.map((_, idx) => ({ wch: idx === 0 ? 25 : 30 }));
+            ws['!cols'] = colWidths;
     
-            // Appliquer des styles aux cellules (facultatif)
-            for (let i = 0; i <= enseignantsData.length; i++) {
-                for (let j = 0; j < headers.length; j++) {
-                    const cellRef = XLSX.utils.encode_cell({ r: i, c: j });
-                    if (!ws[cellRef]) continue;
+            // Apply cell styles
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = range.s.r; R <= range.e.r; R++) {
+                for (let C = range.s.c; C <= range.e.c; C++) {
+                    const cell_address = { c: C, r: R };
+                    const cell_ref = XLSX.utils.encode_cell(cell_address);
+                    if (!ws[cell_ref]) continue;
     
-                    ws[cellRef].s = {
-                        alignment: {
-                            vertical: "center",
-                            horizontal: "center",
-                            wrapText: true,
+                    ws[cell_ref].s = {
+                        alignment: { 
+                            vertical: 'center', 
+                            horizontal: 'center', 
+                            wrapText: true 
+                        },
+                        font: { 
+                            bold: R === 0 || C === 0,
+                            color: { rgb: R === 0 ? "FFFFFF" : "000000" }
+                        },
+                        fill: {
+                            fgColor: { rgb: R === 0 ? "4F81BD" : "FFFFFF" }
                         },
                         border: {
-                            top: { style: "thin" },
-                            bottom: { style: "thin" },
-                            left: { style: "thin" },
-                            right: { style: "thin" },
-                        },
+                            top: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            left: { style: 'thin' },
+                            right: { style: 'thin' }
+                        }
                     };
-    
-                    if (i === 0) {
-                        ws[cellRef].s.font = { bold: true }; // Gras pour les en-têtes
-                        ws[cellRef].s.fill = { fgColor: { rgb: "E2E8F0" } }; // Fond gris clair pour les en-têtes
-                    }
                 }
             }
     
-            // Créer un classeur Excel
+            // Create and save Excel file
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Planning Surveillances");
-    
-            // Générer et télécharger le fichier Excel
+            
             const fileName = `Planning_Surveillances_${new Date().toISOString().split("T")[0]}.xlsx`;
             XLSX.writeFile(wb, fileName);
     
@@ -470,8 +460,6 @@ const SurveillanceComponent = ({ sessionId }) => {
             setLoading(false);
         }
     };
-    
-    
     const handleExportPDF = async () => {
         try {
             setLoading(true);
@@ -614,7 +602,7 @@ const SurveillanceComponent = ({ sessionId }) => {
     body={(rowData) => (
         <div className="flex flex-col">
             <div className="text-sm text-gray-600">
-                 {rowData.optionInfo?.nom || 'Non spécifié'}
+                 {rowData.option?.nom || 'Non spécifié'}
             </div>
         </div>
     )}

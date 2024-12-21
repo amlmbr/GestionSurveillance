@@ -142,4 +142,3 @@ const AssignmentDialog = ({ visible, onHide,selectedEnseignantId, exam, onAssign
 };
 
 export default AssignmentDialog;
-

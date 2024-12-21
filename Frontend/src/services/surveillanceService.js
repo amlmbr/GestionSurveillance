@@ -12,10 +12,7 @@ const SurveillanceService = {
       });
       return response.data;
     } catch (error) {
-      console.error(
-        "Erreur lors de la création de l'examen:",
-        error.response || error.message
-      );
+      console.error("Erreur lors de la récupération de l'emploi:", error);
       throw error;
     }
   },
@@ -37,10 +34,7 @@ const SurveillanceService = {
         },
       }));
     } catch (error) {
-      console.error(
-        "Erreur lors de la création de l'examen:",
-        error.response || error.message
-      );
+      console.error("Erreur lors de la récupération des examens:", error);
       throw error;
     }
   },
@@ -79,29 +73,21 @@ const SurveillanceService = {
           }
         });
       }
-
       return assignments;
     } catch (error) {
       console.error("Erreur dans getSurveillanceAssignments:", error);
-      throw new Error(
-        error.response?.data?.message ||
-          "Erreur lors de la récupération des assignations"
-      );
+      throw error;
     }
   },
+
   getAssignationsByDate: async (date, sessionId, departementId) => {
     try {
       const response = await axiosInstance.get(
         "/api/surveillance/assignments/by-date",
         {
-          params: {
-            date,
-            sessionId,
-            departementId,
-          },
+          params: { date, sessionId, departementId },
         }
       );
-
       return response.data;
     } catch (error) {
       console.error(
@@ -123,8 +109,8 @@ const SurveillanceService = {
       return response.data;
     } catch (error) {
       console.error(
-        "Erreur lors de la création de l'examen:",
-        error.response || error.message
+        "Erreur lors de la récupération des enseignants disponibles:",
+        error
       );
       throw error;
     }
@@ -142,13 +128,9 @@ const SurveillanceService = {
         optionId: assignmentData.optionId,
         moduleId: assignmentData.moduleId,
       });
-
       return response.data;
     } catch (error) {
-      console.error(
-        "Erreur lors de l'assignation du surveillant:",
-        error.response?.data?.message || error.message
-      );
+      console.error("Erreur lors de l'assignation du surveillant:", error);
       throw error;
     }
   },
@@ -164,8 +146,8 @@ const SurveillanceService = {
       return response.data;
     } catch (error) {
       console.error(
-        "Erreur lors de la création de l'examen:",
-        error.response || error.message
+        "Erreur lors de la récupération des locaux disponibles:",
+        error
       );
       throw error;
     }
@@ -179,30 +161,139 @@ const SurveillanceService = {
           departementId
         );
 
-      const excelData = emploiSurveillance.flatMap((jour) => {
-        const dateJour = jour.date;
-        return Object.entries(jour.horaires).flatMap(([horaire, examens]) => {
-          return examens.flatMap((examenData) => {
-            const examen = examenData.examen;
-            const surveillances = examen.surveillanceAssignations || [];
-            return surveillances.map((surveillance) => ({
-              Date: dateJour,
-              Horaire: horaire,
-              Module: `${examen.module}`,
-              "Enseignant Responsable": `${examen.enseignant.nom} ${examen.enseignant.prenom}`,
-              Surveillant: `${surveillance.enseignant.nom} ${surveillance.enseignant.prenom}`,
-              Local: surveillance.local.nom,
-              "Type Surveillant": surveillance.typeSurveillant,
-            }));
+      // Format des données pour Excel
+      const excelData = [];
+
+      // Traiter chaque jour
+      emploiSurveillance.forEach((jour) => {
+        const dateStr = jour.date;
+
+        // Traiter les horaires
+        Object.entries(jour.horaires || {}).forEach(([horaire, examens]) => {
+          const [startTime] = horaire.split("-");
+          const hour = parseInt(startTime);
+          const period = hour < 12 ? "Matin" : "Après-midi";
+
+          examens.forEach((examenData) => {
+            // Vérifier si l'examen a des surveillants assignés
+            if (examenData && examenData.examen) {
+              const examen = examenData.examen;
+
+              // Si pas de surveillants assignés, ajouter une ligne "Non assigné"
+              if (
+                !examen.surveillanceAssignations ||
+                examen.surveillanceAssignations.length === 0
+              ) {
+                excelData.push({
+                  Date: dateStr,
+                  Période: period,
+                  Horaire: horaire,
+                  Module: `${examen.module?.code || ""} - ${
+                    examen.module?.nom || ""
+                  }`,
+                  Option: `${examen.option?.code || ""} - ${
+                    examen.option?.nom || ""
+                  }`,
+                  "Enseignant Responsable": `${examen.enseignant?.nom || ""} ${
+                    examen.enseignant?.prenom || ""
+                  }`,
+                  Surveillant: "Non assigné",
+                  "Type Surveillance": "Non assigné",
+                  Local: "Non assigné",
+                });
+              } else {
+                // Ajouter une ligne pour chaque surveillance assignée
+                examen.surveillanceAssignations.forEach((surveillance) => {
+                  excelData.push({
+                    Date: dateStr,
+                    Période: period,
+                    Horaire: horaire,
+                    Module: `${examen.module?.code || ""} - ${
+                      examen.module?.nom || ""
+                    }`,
+                    Option: `${examen.option?.code || ""} - ${
+                      examen.option?.nom || ""
+                    }`,
+                    "Enseignant Responsable": `${
+                      examen.enseignant?.nom || ""
+                    } ${examen.enseignant?.prenom || ""}`,
+                    Surveillant: `${surveillance.enseignant?.nom || ""} ${
+                      surveillance.enseignant?.prenom || ""
+                    }`,
+                    "Type Surveillance":
+                      surveillance.typeSurveillant || "Non spécifié",
+                    Local: surveillance.local?.nom || "Non spécifié",
+                  });
+                });
+              }
+            }
           });
         });
       });
 
-      // Création du fichier Excel (comme dans votre code)
+      // Créer le workbook et la worksheet
       const worksheet = XLSX.utils.json_to_sheet(excelData);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Surveillances");
 
+      // Configuration des largeurs de colonnes
+      const colWidths = [
+        { wch: 12 }, // Date
+        { wch: 10 }, // Période
+        { wch: 12 }, // Horaire
+        { wch: 25 }, // Module
+        { wch: 25 }, // Option
+        { wch: 25 }, // Enseignant Responsable
+        { wch: 25 }, // Surveillant
+        { wch: 15 }, // Type Surveillance
+        { wch: 15 }, // Local
+      ];
+      worksheet["!cols"] = colWidths;
+
+      // Ajouter des styles aux cellules
+      const range = XLSX.utils.decode_range(worksheet["!ref"]);
+      for (let R = range.s.r; R <= range.e.r; R++) {
+        for (let C = range.s.c; C <= range.e.c; C++) {
+          const cell_address = { c: C, r: R };
+          const cell_ref = XLSX.utils.encode_cell(cell_address);
+
+          if (!worksheet[cell_ref]) continue;
+
+          worksheet[cell_ref].s = {
+            font: {
+              bold: R === 0,
+              color: { rgb: R === 0 ? "FFFFFF" : "000000" },
+            },
+            fill: {
+              fgColor: { rgb: R === 0 ? "4F81BD" : "FFFFFF" },
+            },
+            alignment: {
+              vertical: "center",
+              horizontal: "center",
+              wrapText: true,
+            },
+            border: {
+              top: { style: "thin" },
+              bottom: { style: "thin" },
+              left: { style: "thin" },
+              right: { style: "thin" },
+            },
+          };
+        }
+      }
+
+      // Ajouter la worksheet au workbook
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Planning Surveillances"
+      );
+
+      // Générer le nom du fichier avec la date actuelle
+      const fileName = `Planning_Surveillances_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
+
+      // Sauvegarder le fichier
       const excelBuffer = XLSX.write(workbook, {
         bookType: "xlsx",
         type: "array",
@@ -210,35 +301,32 @@ const SurveillanceService = {
       const blob = new Blob([excelBuffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      saveAs(
-        blob,
-        `Surveillances_Session_${sessionId}_${
-          new Date().toISOString().split("T")[0]
-        }.xlsx`
-      );
+      saveAs(blob, fileName);
 
       if (toast) {
         toast.show({
           severity: "success",
           summary: "Succès",
-          detail: "Surveillances exportées avec succès.",
+          detail: "Planning des surveillances exporté avec succès.",
+          life: 3000,
         });
       }
     } catch (error) {
+      console.error("Erreur lors de l'exportation:", error);
       if (toast) {
         toast.show({
           severity: "error",
           summary: "Erreur",
-          detail: error.message || "Erreur lors de l'exportation.",
+          detail: "Erreur lors de l'exportation du planning.",
+          life: 3000,
         });
       }
-      throw error; // Relancer l'erreur si nécessaire
+      throw error;
     }
   },
 
   exporterSurveillancesPDF: async (sessionId, departementId, toast) => {
     try {
-      // Récupérer les données de surveillance
       const emploiSurveillance =
         await SurveillanceService.getEmploiSurveillance(
           sessionId,
@@ -254,83 +342,70 @@ const SurveillanceService = {
         "Planning des Surveillances",
         doc.internal.pageSize.width / 2,
         15,
-        { align: "center" }
+        {
+          align: "center",
+        }
       );
 
-      let startY = 25; // Position de départ verticale
+      let startY = 25;
 
       emploiSurveillance.forEach((jour) => {
-        // Ajouter la date comme en-tête
+        // Ajouter la date
         doc.setFontSize(12);
         doc.setTextColor(0, 0, 0);
         doc.text(`Date: ${jour.date}`, 10, startY);
-        startY += 5;
+        startY += 10;
 
-        // Trier les horaires entre matin et après-midi
-        const horairesMatin = [];
-        const horairesApresMidi = [];
-
-        Object.entries(jour.horaires).forEach(([horaire, examens]) => {
-          const heureDebut = parseInt(horaire.split(":")[0], 10);
-          if (heureDebut >= 8 && heureDebut < 12) {
-            horairesMatin.push({ horaire, examens });
-          } else if (heureDebut >= 12) {
-            horairesApresMidi.push({ horaire, examens });
-          }
-        });
-
-        // Fonction pour ajouter une section horaire
-        const addHoraireSection = (sectionTitle, horaires) => {
+        // Traiter les horaires
+        Object.entries(jour.horaires || {}).forEach(([horaire, examens]) => {
+          // Ajouter l'horaire
           doc.setFontSize(10);
-          doc.setFont("helvetica", "bold");
-          doc.text(sectionTitle, 10, startY);
+          doc.text(`Horaire: ${horaire}`, 15, startY);
           startY += 5;
 
-          horaires.forEach(({ horaire, examens }) => {
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            doc.text(`Horaire: ${horaire}`, 15, startY);
-            startY += 4;
-
-            examens.forEach((examenData) => {
+          examens.forEach((examenData) => {
+            if (examenData && examenData.examen) {
               const examen = examenData.examen;
-              const surveillances = examen.surveillanceAssignations || [];
 
-              // Détail des surveillances
-              surveillances
-                .filter(
-                  (surveillance) =>
-                    surveillance.enseignant.departementId === departementId
-                )
-                .forEach((surveillance) => {
-                  const details = `
-                    Module: ${examen.module} |
-                    Responsable: ${examen.enseignant.nom} ${examen.enseignant.prenom} |
-                    Surveillant: ${surveillance.enseignant.nom} ${surveillance.enseignant.prenom} |
-                    Local: ${surveillance.local.nom} (${surveillance.typeSurveillant})
-                  `;
-                  doc.text(details, 20, startY);
-                  startY += 4;
+              // Informations de l'examen
+              const examenInfo = `Module: ${examen.module?.code || ""} - ${
+                examen.module?.nom || ""
+              }`;
+              doc.text(examenInfo, 20, startY);
+              startY += 5;
 
-                  // Gérer les sauts de page
-                  if (startY > doc.internal.pageSize.height - 10) {
-                    doc.addPage();
-                    startY = 10;
-                  }
+              // Vérifier les surveillances
+              if (
+                !examen.surveillanceAssignations ||
+                examen.surveillanceAssignations.length === 0
+              ) {
+                doc.text("Surveillance: Non assigné", 20, startY);
+                startY += 5;
+              } else {
+                examen.surveillanceAssignations.forEach((surveillance) => {
+                  const surveillanceInfo = `Surveillant: ${
+                    surveillance.enseignant?.nom || ""
+                  } ${surveillance.enseignant?.prenom || ""} | Local: ${
+                    surveillance.local?.nom || ""
+                  } (${surveillance.typeSurveillant || ""})`;
+                  doc.text(surveillanceInfo, 20, startY);
+                  startY += 5;
                 });
-            });
+              }
+
+              // Ajouter un espace entre les examens
+              startY += 5;
+
+              // Vérifier si on doit passer à une nouvelle page
+              if (startY > doc.internal.pageSize.height - 20) {
+                doc.addPage();
+                startY = 20;
+              }
+            }
           });
-        };
+        });
 
-        // Ajouter les sections matin et après-midi
-        if (horairesMatin.length > 0) {
-          addHoraireSection("Matin", horairesMatin);
-        }
-        if (horairesApresMidi.length > 0) {
-          addHoraireSection("Après-midi", horairesApresMidi);
-        }
-
-        // Ajouter une marge entre les jours
+        // Ajouter un espace entre les jours
         startY += 10;
       });
 
@@ -345,14 +420,17 @@ const SurveillanceService = {
           severity: "success",
           summary: "Succès",
           detail: "Surveillances exportées en PDF avec succès.",
+          life: 3000,
         });
       }
     } catch (error) {
+      console.error("Erreur lors de l'exportation PDF:", error);
       if (toast) {
         toast.show({
           severity: "error",
           summary: "Erreur",
-          detail: error.message || "Erreur lors de l'exportation PDF.",
+          detail: "Erreur lors de l'exportation PDF.",
+          life: 3000,
         });
       }
       throw error;
