@@ -253,11 +253,11 @@ public class SurveillanceServiceImpl implements SurveillanceService {
 
     @Override
     @Transactional
-    public boolean modifierAssignation(Long assignationId, Long localId, String typeSurveillant) {
+    public boolean modifierAssignation(Long assignationId, String localId, String typeSurveillant) {
         SurveillanceAssignation assignation = surveillanceAssignationRepository.findById(assignationId)
                 .orElseThrow(() -> new RuntimeException("Assignation non trouvée"));
 
-        Local local = localRepository.findById(localId)
+        Local local = localRepository.findLocalByNom(localId)
                 .orElseThrow(() -> new RuntimeException("Local non trouvé"));
 
         assignation.setLocal(local);

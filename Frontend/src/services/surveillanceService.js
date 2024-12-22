@@ -473,6 +473,12 @@ const SurveillanceService = {
       throw error;
     }
   },
+  updateSurveillanceAssignation: async (assignationId, localId, typeSurveillant) => {
+    const response = await axiosInstance.put(`/api/surveillance/modifier`, null, {
+        params: { assignationId, localId, typeSurveillant }
+    });
+    return response.data;
+},
 };
 
 export default SurveillanceService;

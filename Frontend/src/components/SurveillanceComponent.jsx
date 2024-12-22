@@ -331,13 +331,13 @@ const handleDeleteAssignment = (assignment) => {
 };
 const handleSaveEdit = async (updatedAssignment) => {
     try {
-        await SurveillanceService.updateSurveillanceAssignation(
-            updatedAssignment.id,
-            {
-                local: updatedAssignment.local,
-                typeSurveillant: updatedAssignment.typeSurveillant
-            }
-        );
+        console.log(updatedAssignment)
+       await SurveillanceService.updateSurveillanceAssignation(
+    updatedAssignment.id,
+    updatedAssignment.local,
+    updatedAssignment.typeSurveillant
+);
+        
         await loadSurveillanceAssignments();
         toast.current.show({
             severity: 'success',
@@ -349,8 +349,9 @@ const handleSaveEdit = async (updatedAssignment) => {
         toast.current.show({
             severity: 'error',
             summary: 'Erreur',
-            detail: 'Erreur lors de la mise à jour'
+            detail: 'Erreur lors de la mise à jour '
         });
+        console.log("error ",error)
     }
 };
 const deleteAssignment = async (assignment) => {
@@ -370,66 +371,7 @@ const deleteAssignment = async (assignment) => {
         });
     }
 };
-    const handleEdit = async (updatedAssignment) => {
-        try {
-            await SurveillanceService.updateSurveillanceAssignation(
-                updatedAssignment.id,
-                {
-                    local: updatedAssignment.local,
-                    typeSurveillant: updatedAssignment.typeSurveillant
-                }
-            );
-            loadSurveillanceAssignments();
-            toast.current.show({
-                severity: 'success',
-                summary: 'Succès',
-                detail: 'Assignation mise à jour avec succès'
-            });
-        } catch (error) {
-            toast.current.show({
-                severity: 'error',
-                summary: 'Erreur',
-                detail: 'Erreur lors de la mise à jour'
-            });
-        }
-    };
-    
-    const handleDelete = async (assignment) => {
-        try {
-            await SurveillanceService.deleteSurveillanceAssignation(assignment.id);
-            loadSurveillanceAssignments();
-            toast.current.show({
-                severity: 'success',
-                summary: 'Succès',
-                detail: 'Assignation supprimée avec succès'
-            });
-        } catch (error) {
-            toast.current.show({
-                severity: 'error',
-                summary: 'Erreur',
-                detail: 'Erreur lors de la suppression'
-            });
-        }
-    };
-   /* const renderCellContent = (date, horaire, enseignantId) => {
-        const key = `${date}_${horaire}`;
-        const assignment = surveillanceAssignments[key];
-    
-        if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
-            return (
-                <div className="flex justify-center items-center">
-                    <ProgressSpinner style={{ width: '20px', height: '20px' }} />
-                </div>
-            );
-        }
-    
-        return (
-            <SurveillanceCell
-                assignment={assignment}
-                onClick={() => handleCellClick(date, horaire, enseignantId)} // Passez l'ID de l'enseignant ici
-            />
-        );
-    };*/
+   
     const renderCellContent = (rowData, field) => {
         if (!rowData[field] || !field) {
             return null;

@@ -93,7 +93,7 @@ public class SurveillanceController {
     @PutMapping("/modifier")
     public ResponseEntity<?> modifierAssignation(
             @RequestParam Long assignationId,
-            @RequestParam Long localId,
+            @RequestParam String localId,
             @RequestParam String typeSurveillant) {
         try {
             boolean success = surveillanceService.modifierAssignation(assignationId, localId, typeSurveillant);
