@@ -4,6 +4,8 @@ import com.example.jeeproject.entity.*;
 import com.example.jeeproject.entity.Module;
 import com.example.jeeproject.repo.*;
 import com.example.jeeproject.dto.AssignSurveillantRequest;
+
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -246,6 +248,42 @@ public class SurveillanceServiceImpl implements SurveillanceService {
             return assignationData;
         }).collect(Collectors.toList());
     }
+    
+    @Override
+    @Transactional
+    public boolean modifierAssignation(Long assignationId, Long localId, String typeSurveillant) {
+        SurveillanceAssignation assignation = surveillanceAssignationRepository.findById(assignationId)
+            .orElseThrow(() -> new RuntimeException("Assignation non trouvée"));
+
+        Local local = localRepository.findById(localId)
+            .orElseThrow(() -> new RuntimeException("Local non trouvé"));
+
+        assignation.setLocal(local);
+        assignation.setTypeSurveillant(typeSurveillant);
+
+        surveillanceAssignationRepository.save(assignation);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean supprimerAssignation(Long assignationId) {
+        try {
+            // Vérification explicite de l'existence
+            Optional<SurveillanceAssignation> assignation = 
+                surveillanceAssignationRepository.findById(assignationId);
+            
+            if (!assignation.isPresent()) {
+                throw new EntityNotFoundException("Assignation avec ID " + assignationId + " non trouvée");
+            }
+            
+            surveillanceAssignationRepository.delete(assignation.get());
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la suppression de l'assignation: " + e.getMessage());
+        }
+    }
+
 	
     
     
