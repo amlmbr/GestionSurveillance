@@ -18,6 +18,9 @@ import SurveillanceService from '../services/surveillanceService';
 import SurveillanceAssignmentDisplay from './SurveillanceAssignmentDisplay';
 import SurveillanceCell from './SurveillanceCell';
 import * as XLSX from 'xlsx';
+import { confirmDialog } from 'primereact/confirmdialog';
+import { ConfirmDialog } from 'primereact/confirmdialog';
+import EditAssignmentDialog from './EditAssignmentDialog';
 
 
 const SurveillanceComponent = ({ sessionId }) => {
@@ -277,7 +280,137 @@ const SurveillanceComponent = ({ sessionId }) => {
             setLoading(false);
         }
     };
+    const [editDialogVisible, setEditDialogVisible] = useState(false);
+const [selectedAssignment, setSelectedAssignment] = useState(null);
+
+const handleEditAssignment = (assignment) => {
+    setSelectedAssignment(assignment);
+    setEditDialogVisible(true);
+};
+
+const handleDeleteAssignment = (assignment) => {
+    if (!assignment) { // Retirez la vérification de l'ID
+        toast.current.show({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Assignation invalide',
+            life: 3000
+        });
+        return;
+    }
+
+    confirmDialog({
+        message: 'Êtes-vous sûr de vouloir supprimer cette assignation ?',
+        header: 'Confirmation de suppression',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClassName: 'p-button-danger',
+        accept: async () => {
+            try {
+                setLoading(true);
+                await SurveillanceService.deleteSurveillanceAssignation(assignment.surveillanceId || assignment.id);
+                await loadSurveillanceAssignments();
+                
+                toast.current.show({
+                    severity: 'success',
+                    summary: 'Succès',
+                    detail: 'Assignation supprimée avec succès',
+                    life: 3000
+                });
+            } catch (error) {
+                toast.current.show({
+                    severity: 'error',
+                    summary: 'Erreur',
+                    detail: error.message || 'Erreur lors de la suppression',
+                    life: 5000
+                });
+            } finally {
+                setLoading(false);
+            }
+        }
+    });
+};
+const handleSaveEdit = async (updatedAssignment) => {
+    try {
+        await SurveillanceService.updateSurveillanceAssignation(
+            updatedAssignment.id,
+            {
+                local: updatedAssignment.local,
+                typeSurveillant: updatedAssignment.typeSurveillant
+            }
+        );
+        await loadSurveillanceAssignments();
+        toast.current.show({
+            severity: 'success',
+            summary: 'Succès',
+            detail: 'Assignation mise à jour avec succès'
+        });
+        setEditDialogVisible(false);
+    } catch (error) {
+        toast.current.show({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Erreur lors de la mise à jour'
+        });
+    }
+};
+const deleteAssignment = async (assignment) => {
+    try {
+        await SurveillanceService.deleteSurveillanceAssignation(assignment.id);
+        await loadSurveillanceAssignments();
+        toast.current.show({
+            severity: 'success',
+            summary: 'Succès',
+            detail: 'Assignation supprimée avec succès'
+        });
+    } catch (error) {
+        toast.current.show({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Erreur lors de la suppression'
+        });
+    }
+};
+    const handleEdit = async (updatedAssignment) => {
+        try {
+            await SurveillanceService.updateSurveillanceAssignation(
+                updatedAssignment.id,
+                {
+                    local: updatedAssignment.local,
+                    typeSurveillant: updatedAssignment.typeSurveillant
+                }
+            );
+            loadSurveillanceAssignments();
+            toast.current.show({
+                severity: 'success',
+                summary: 'Succès',
+                detail: 'Assignation mise à jour avec succès'
+            });
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Erreur',
+                detail: 'Erreur lors de la mise à jour'
+            });
+        }
+    };
     
+    const handleDelete = async (assignment) => {
+        try {
+            await SurveillanceService.deleteSurveillanceAssignation(assignment.id);
+            loadSurveillanceAssignments();
+            toast.current.show({
+                severity: 'success',
+                summary: 'Succès',
+                detail: 'Assignation supprimée avec succès'
+            });
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Erreur',
+                detail: 'Erreur lors de la suppression'
+            });
+        }
+    };
    /* const renderCellContent = (date, horaire, enseignantId) => {
         const key = `${date}_${horaire}`;
         const assignment = surveillanceAssignments[key];
@@ -303,14 +436,14 @@ const SurveillanceComponent = ({ sessionId }) => {
         }
         const date = rowData[field].date;
         const horaire = rowData[field].horaire;
-        // Récupérer l'ID de l'enseignant au lieu du nom
-        const enseignantId = rowData.enseignantId; 
+        const enseignantId = rowData.enseignantId;
         
         if (!date || !horaire) {
             return null;
         }
         const key = `${date}_${horaire}`;
         const assignmentsList = surveillanceAssignments[key];
+        
         if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
             return <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
         }
@@ -324,9 +457,26 @@ const SurveillanceComponent = ({ sessionId }) => {
             return (
                 <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#e3f2fd' }}>
                     {professorAssignments.map((assignment, index) => (
-                        <div key={index} style={{ marginBottom: '4px' }}>
-                            <div><strong>Local:</strong> {assignment.local}</div>
-                            <div><strong>Type:</strong> {assignment.typeSurveillant}</div>
+                        <div key={index} className="mb-2">
+                            <div className="flex flex-column">
+                                <div><strong>Local:</strong> {assignment.local}</div>
+                                <div><strong>Type:</strong> {assignment.typeSurveillant}</div>
+                                <div className="flex justify-content-center gap-2 mt-2">
+                                    <Button
+                                        icon="pi pi-pencil"
+                                        className="p-button-rounded p-button-warning p-button-text"
+                                        onClick={() => handleEditAssignment(assignment)}
+                                        tooltip="Modifier"
+                                    />
+                                    <Button
+                                        icon="pi pi-trash"
+                                        className="p-button-rounded p-button-danger p-button-text"
+                                        onClick={() => handleDeleteAssignment(assignment)}
+                                        tooltip="Supprimer"
+                                        disabled={false} // Désactiver si pas d'ID
+                                    />
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -336,13 +486,12 @@ const SurveillanceComponent = ({ sessionId }) => {
                 <Button
                     label="Assigner"
                     className="p-button-text p-button-sm"
-                    onClick={() => handleCellClick(date, horaire, enseignantId)} // Envoi de l'ID au lieu du nom
+                    onClick={() => handleCellClick(date, horaire, enseignantId)}
                 />
             );
         }
     };
-
-
+    
     const handleExportSurveillances = async () => {
         try {
             setLoading(true);
@@ -507,6 +656,7 @@ const SurveillanceComponent = ({ sessionId }) => {
                             <span className="text-600 font-medium">Session {session?.nom}</span>
                         </div>
                         <Toast ref={toast} />
+                        <ConfirmDialog />
 
                         <div className="mb-4" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
     <div style={{ flex: 1 }}>
@@ -661,6 +811,12 @@ const SurveillanceComponent = ({ sessionId }) => {
   onAssign={handleAssignment}
   loading={loading}
 />
+<EditAssignmentDialog
+                visible={editDialogVisible}
+                onHide={() => setEditDialogVisible(false)}
+                assignment={selectedAssignment}
+                onSave={handleSaveEdit}
+            />
         </div>
     );
 };

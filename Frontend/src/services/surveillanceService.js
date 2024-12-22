@@ -59,12 +59,14 @@ const SurveillanceService = {
                       assignments[key] = [];
                     }
                     assignments[key].push({
+                      id: surveillant.id, // S'assurer que l'ID est inclus
                       local: surveillant.local.nom || "Non spécifié",
                       typeSurveillant:
                         surveillant.typeSurveillant || "Non spécifié",
                       enseignant: `${surveillant.enseignant.nom || ""} ${
                         surveillant.enseignant.prenom || ""
                       }`,
+                      surveillanceId: surveillant.surveillanceId, // Ajouter aussi l'ID de la surveillance
                     });
                   }
                 });
@@ -79,7 +81,6 @@ const SurveillanceService = {
       throw error;
     }
   },
-
   getAssignationsByDate: async (date, sessionId, departementId) => {
     try {
       const response = await axiosInstance.get(
@@ -433,6 +434,42 @@ const SurveillanceService = {
           life: 3000,
         });
       }
+      throw error;
+    }
+  },
+  deleteSurveillanceAssignation: async (assignationId) => {
+    if (!assignationId) {
+      throw new Error("ID d'assignation invalide");
+    }
+
+    try {
+      const response = await axiosInstance.delete(
+        `/api/surveillance/supprimer/${assignationId}`
+      );
+
+      if (response.status === 200) {
+        return true;
+      }
+
+      throw new Error(response.data?.message || "Échec de la suppression");
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'assignation:", error);
+      throw (
+        error.response?.data?.message ||
+        "Erreur lors de la suppression de l'assignation"
+      );
+    }
+  },
+
+  // Méthode auxiliaire pour rafraîchir les données après une suppression
+  refreshSurveillanceData: async (sessionId, departementId) => {
+    try {
+      const response = await axiosInstance.get("/api/surveillance/emploi", {
+        params: { sessionId, departementId },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement des données:", error);
       throw error;
     }
   },

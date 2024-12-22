@@ -82,4 +82,8 @@ public class Local {
 	public void setEstDisponible(boolean estDisponible) {
 		this.estDisponible = estDisponible;
 	}
+	public Local orElseThrow(Object object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

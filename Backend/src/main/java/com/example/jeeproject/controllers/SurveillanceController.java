@@ -6,6 +6,9 @@ import com.example.jeeproject.entity.Enseignant;
 import com.example.jeeproject.entity.Examen;
 import com.example.jeeproject.entity.Local;
 import com.example.jeeproject.services.SurveillanceService;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -86,5 +89,59 @@ public class SurveillanceController {
                 .body(Map.of("message", "Erreur interne: " + e.getMessage()));
         }
     }
+    
+    @PutMapping("/modifier")
+    public ResponseEntity<?> modifierAssignation(
+            @RequestParam Long assignationId,
+            @RequestParam Long localId,
+            @RequestParam String typeSurveillant) {
+        try {
+            boolean success = surveillanceService.modifierAssignation(assignationId, localId, typeSurveillant);
+            return ResponseEntity.ok(Map.of("message", "Assignation modifiée avec succès."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Erreur interne: " + e.getMessage()));
+        }
+    }
+    @DeleteMapping("/supprimer/{assignationId}")
+    public ResponseEntity<?> supprimerAssignation(@PathVariable Long assignationId) {
+        try {
+            // Validation explicite de l'ID
+            if (assignationId == null || assignationId <= 0) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of(
+                        "success", false,
+                        "message", "ID d'assignation invalide"
+                    ));
+            }
 
+            boolean deleted = surveillanceService.supprimerAssignation(assignationId);
+            if (deleted) {
+                return ResponseEntity.ok()
+                    .body(Map.of(
+                        "success", true,
+                        "message", "Assignation supprimée avec succès"
+                    ));
+            } else {
+                return ResponseEntity.notFound()
+                    .build();
+            }
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                    "success", false,
+                    "message", "Assignation non trouvée: " + e.getMessage()
+                ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                    "success", false,
+                    "message", "Erreur lors de la suppression: " + e.getMessage()
+                ));
+        }
+    }
+
+    
 }

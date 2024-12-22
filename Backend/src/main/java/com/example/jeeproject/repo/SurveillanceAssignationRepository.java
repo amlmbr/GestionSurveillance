@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SurveillanceAssignationRepository extends JpaRepository<SurveillanceAssignation, Long> {
@@ -61,4 +62,5 @@ public interface SurveillanceAssignationRepository extends JpaRepository<Surveil
     List<SurveillanceAssignation> findByDepartementId(Long departementId);
 
 
+    Optional<SurveillanceAssignation> findById(Long id);
 }

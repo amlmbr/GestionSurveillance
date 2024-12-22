@@ -25,4 +25,8 @@ public interface SurveillanceService {
 
     
     int getNombreSurveillantRequis(int nbEtudiants);
+    
+    boolean modifierAssignation(Long assignationId, Long localId, String typeSurveillant);
+    boolean supprimerAssignation(Long assignationId);
+
 }
