@@ -102,7 +102,7 @@ const SurveillanceComponent = ({ sessionId }) => {
         try {
             setLoading(true);
             const assignments = await SurveillanceService.getSurveillanceAssignments(sessionId, selectedDepartement);
-            console.log(assignments)
+            console.log("hi ",assignments)
             setSurveillanceAssignments(assignments);
         } catch (error) {
             console.error('Erreur de chargement des assignations:', error);

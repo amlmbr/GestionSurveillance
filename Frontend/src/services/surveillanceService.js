@@ -59,7 +59,7 @@ const SurveillanceService = {
                       assignments[key] = [];
                     }
                     assignments[key].push({
-                      id: surveillant.id, // S'assurer que l'ID est inclus
+                      id: surveillant.surveillanceId, // S'assurer que l'ID est inclus
                       local: surveillant.local.nom || "Non spécifié",
                       typeSurveillant:
                         surveillant.typeSurveillant || "Non spécifié",

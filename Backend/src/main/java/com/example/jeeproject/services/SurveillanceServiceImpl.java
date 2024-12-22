@@ -42,7 +42,7 @@ public class SurveillanceServiceImpl implements SurveillanceService {
             dayData.put("date", currentDate);
 
             Map<String, List<Map<String, Object>>> horaires = new HashMap<>();
-            
+
             for (String slot : slots) {
                 List<Examen> examens = examenRepository.findByDateAndHoraireAndSessionAndDepartement(
                         currentDate, slot, sessionId, departementId);
@@ -56,6 +56,7 @@ public class SurveillanceServiceImpl implements SurveillanceService {
                         surveillantData.put("enseignant", assignation.getEnseignant());
                         surveillantData.put("typeSurveillant", assignation.getTypeSurveillant());
                         surveillantData.put("local", assignation.getLocal());
+                        surveillantData.put("surveillanceId", assignation.getId()); // Ajouter l'ID de la surveillance
                         surveillantsParSlot.add(surveillantData);
                     }
                 }
@@ -70,9 +71,10 @@ public class SurveillanceServiceImpl implements SurveillanceService {
 
         return emploi;
     }
+
     private List<String> generateTimeSlots(Session session) {
         List<String> slots = new ArrayList<>();
-        
+
         // Ajouter les créneaux uniquement s'ils sont définis dans la session
         if (session.getStart1() != null && session.getEnd1() != null) {
             slots.add(session.getStart1() + "-" + session.getEnd1());
@@ -86,7 +88,7 @@ public class SurveillanceServiceImpl implements SurveillanceService {
         if (session.getStart4() != null && session.getEnd4() != null) {
             slots.add(session.getStart4() + "-" + session.getEnd4());
         }
-        
+
         return slots;
     }
 
@@ -100,11 +102,11 @@ public class SurveillanceServiceImpl implements SurveillanceService {
 
     // Les autres méthodes restent identiques, mais utilisez session pour les horaires
     // Par exemple dans verifierContraintesSurveillance :
-    
 
 
 
-        @Override
+
+    @Override
     public List<Examen> getExamensByDateAndHoraire(LocalDate date, String horaire, Long sessionId) {
         return examenRepository.findBySessionIdAndDateAndHoraire(sessionId, date, horaire);
     }
@@ -115,29 +117,29 @@ public class SurveillanceServiceImpl implements SurveillanceService {
         try {
             // Validation des entités
             Examen examen = examenRepository.findById(request.getExamenId())
-                .orElseThrow(() -> new RuntimeException("Examen non trouvé"));
-            
+                    .orElseThrow(() -> new RuntimeException("Examen non trouvé"));
+
             Enseignant enseignant = enseignantRepository.findById(request.getEnseignantId())
-                .orElseThrow(() -> new RuntimeException("Enseignant non trouvé"));
-            
+                    .orElseThrow(() -> new RuntimeException("Enseignant non trouvé"));
+
             Local local = localRepository.findById(request.getLocalId())
-                .orElseThrow(() -> new RuntimeException("Local non trouvé"));
+                    .orElseThrow(() -> new RuntimeException("Local non trouvé"));
 
             Departement departement = departementRepository.findById(request.getDepartementId())
-                .orElseThrow(() -> new RuntimeException("Département non trouvé"));
+                    .orElseThrow(() -> new RuntimeException("Département non trouvé"));
 
             Session session = sessionRepository.findById(request.getSessionId())
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+                    .orElseThrow(() -> new RuntimeException("Session non trouvée"));
 
             Option option = optionRepository.findById(request.getOptionId())
-                .orElseThrow(() -> new RuntimeException("Option non trouvée"));
+                    .orElseThrow(() -> new RuntimeException("Option non trouvée"));
 
             Module module = moduleRepository.findById(request.getModuleId())
-                .orElseThrow(() -> new RuntimeException("Module non trouvé"));
+                    .orElseThrow(() -> new RuntimeException("Module non trouvé"));
 
             // Vérification des contraintes
             if (!verifierContraintesSurveillance(
-                    request.getExamenId(), 
+                    request.getExamenId(),
                     request.getEnseignantId(),
                     request.getLocalId(),
                     request.getTypeSurveillant())) {
@@ -165,11 +167,11 @@ public class SurveillanceServiceImpl implements SurveillanceService {
     @Override
     public boolean verifierContraintesSurveillance(Long examenId, Long enseignantId, Long localId, String typeSurveillant) {
         Examen examen = examenRepository.findById(examenId)
-            .orElseThrow(() -> new RuntimeException("Examen non trouvé"));
+                .orElseThrow(() -> new RuntimeException("Examen non trouvé"));
 
         LocalDate dateExamen = examen.getDate();
         String periode = getPeriodeFromHoraire(examen.getHoraire());
-        
+
         if (surveillanceAssignationRepository.existsByEnseignantAndDateAndPeriode(enseignantId, dateExamen, periode)) {
             throw new RuntimeException("L'enseignant est déjà assigné à un autre examen durant cette période");
         }
@@ -211,11 +213,11 @@ public class SurveillanceServiceImpl implements SurveillanceService {
     private String getPeriodeFromHoraire(String horaire) {
         return horaire.startsWith("start1") || horaire.startsWith("start2") ? "MATIN" : "APRES_MIDI";
     }
-    
+
     @Override
     public List<Map<String, Object>> getAssignationsSurveillance(Long sessionId, Long departementId, LocalDate date) {
         List<SurveillanceAssignation> assignations;
-        
+
         if (date != null) {
             assignations = surveillanceAssignationRepository.findByDate(date);
         } else if (sessionId != null && departementId != null) {
@@ -230,33 +232,33 @@ public class SurveillanceServiceImpl implements SurveillanceService {
             Map<String, Object> assignationData = new HashMap<>();
             assignationData.put("id", assignation.getId());
             assignationData.put("examen", Map.of(
-                "id", assignation.getExamen().getId(),
-                "date", assignation.getExamen().getDate(),
-                "horaire", assignation.getExamen().getHoraire()
+                    "id", assignation.getExamen().getId(),
+                    "date", assignation.getExamen().getDate(),
+                    "horaire", assignation.getExamen().getHoraire()
             ));
             assignationData.put("enseignant", Map.of(
-                "id", assignation.getEnseignant().getId(),
-                "nom", assignation.getEnseignant().getNom(),
-                "prenom", assignation.getEnseignant().getPrenom()
+                    "id", assignation.getEnseignant().getId(),
+                    "nom", assignation.getEnseignant().getNom(),
+                    "prenom", assignation.getEnseignant().getPrenom()
             ));
             assignationData.put("local", Map.of(
-                "id", assignation.getLocal().getId(),
-                "nom", assignation.getLocal().getNom()
+                    "id", assignation.getLocal().getId(),
+                    "nom", assignation.getLocal().getNom()
             ));
             assignationData.put("typeSurveillant", assignation.getTypeSurveillant());
-            
+
             return assignationData;
         }).collect(Collectors.toList());
     }
-    
+
     @Override
     @Transactional
     public boolean modifierAssignation(Long assignationId, Long localId, String typeSurveillant) {
         SurveillanceAssignation assignation = surveillanceAssignationRepository.findById(assignationId)
-            .orElseThrow(() -> new RuntimeException("Assignation non trouvée"));
+                .orElseThrow(() -> new RuntimeException("Assignation non trouvée"));
 
         Local local = localRepository.findById(localId)
-            .orElseThrow(() -> new RuntimeException("Local non trouvé"));
+                .orElseThrow(() -> new RuntimeException("Local non trouvé"));
 
         assignation.setLocal(local);
         assignation.setTypeSurveillant(typeSurveillant);
@@ -270,13 +272,13 @@ public class SurveillanceServiceImpl implements SurveillanceService {
     public boolean supprimerAssignation(Long assignationId) {
         try {
             // Vérification explicite de l'existence
-            Optional<SurveillanceAssignation> assignation = 
-                surveillanceAssignationRepository.findById(assignationId);
-            
+            Optional<SurveillanceAssignation> assignation =
+                    surveillanceAssignationRepository.findById(assignationId);
+
             if (!assignation.isPresent()) {
                 throw new EntityNotFoundException("Assignation avec ID " + assignationId + " non trouvée");
             }
-            
+
             surveillanceAssignationRepository.delete(assignation.get());
             return true;
         } catch (Exception e) {
@@ -284,10 +286,10 @@ public class SurveillanceServiceImpl implements SurveillanceService {
         }
     }
 
-	
-    
-    
-    
-    
+
+
+
+
+
 
 }
