@@ -38,7 +38,7 @@ public class SurveillanceServiceImpl implements SurveillanceService {
                 dayData.put("date", currentDate);
 
                 Map<String, List<Map<String, Object>>> horaires = new HashMap<>();
-                String[] slots = {"08:00-10:00", "10:00-12:00", "14:00-16:00", "16:00-18:00"};
+                String[] slots = {"09:00-10:00", "10:00-12:00", "14:00-16:00", "16:00-18:00"};
                 for (String slot : slots) {
                     List<Examen> examens = examenRepository.findByDateAndHoraireAndSessionAndDepartement(
                             currentDate, slot, sessionId, departementId);
