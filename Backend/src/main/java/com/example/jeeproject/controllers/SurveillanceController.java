@@ -86,5 +86,8 @@ public class SurveillanceController {
                 .body(Map.of("message", "Erreur interne: " + e.getMessage()));
         }
     }
+    
+    
+    
 
 }

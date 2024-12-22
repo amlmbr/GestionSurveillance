@@ -1,51 +1,139 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { Dropdown } from 'primereact/dropdown';
+import { confirmDialog } from 'primereact/confirmdialog';
 
-const SurveillanceCell = ({ assignments, onClick }) => {
-    if (!assignments || assignments.length === 0) {
-      return (
-        <div
-          className="cursor-pointer hover:bg-gray-50 p-2 flex justify-center items-center rounded-md transition-colors border border-gray-200"
-          onClick={onClick}
-        >
-          <div className="flex flex-col items-center gap-1">
-            <i className="pi pi-user-plus text-gray-400" />
-            <span className="text-xs text-gray-500">Assigner</span>
-          </div>
-        </div>
-      );
-    }
-  
+const SurveillanceCell = ({ 
+  assignment, 
+  onEdit, 
+  onDelete, 
+  locaux, 
+  onClick,
+  loading 
+}) => {
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editData, setEditData] = useState({
+    local: '',
+    typeSurveillant: ''
+  });
+
+  const typesSurveillant = [
+    { label: 'Principal', value: 'PRINCIPAL' },
+    { label: 'Assistant', value: 'ASSISTANT' },
+    { label: 'Reserviste', value: 'RESERVISTE' }
+  ];
+
+  const handleEdit = () => {
+    setEditData({
+      local: assignment.local,
+      typeSurveillant: assignment.typeSurveillant
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleDelete = () => {
+    confirmDialog({
+      message: 'Êtes-vous sûr de vouloir supprimer cette assignation ?',
+      header: 'Confirmation de suppression',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Oui',
+      rejectLabel: 'Non',
+      accept: () => onDelete(assignment)
+    });
+  };
+
+  const handleSaveEdit = () => {
+    onEdit({ ...assignment, ...editData });
+    setShowEditDialog(false);
+  };
+
+  if (loading) {
     return (
-      <div
-        className="cursor-pointer p-2 flex flex-col items-center rounded-md transition-colors border"
-        onClick={onClick}
-      >
-        {assignments.map((assignment, index) => (
-          <div 
-            key={assignment.id}
-            className={`w-full p-1 mb-1 rounded ${
-              assignment.typeSurveillant === 'PRINCIPAL' 
-                ? 'bg-blue-50' 
-                : 'bg-green-50'
-            }`}
-          >
-            <div className="text-sm font-medium text-gray-800">
-              {assignment.local}
-            </div>
-            <div className="text-xs text-gray-600">
-              {assignment.typeSurveillant === 'PRINCIPAL' ? 'Principal' : 'Réserviste'}
-            </div>
-            <div className="flex items-center gap-1">
-              <i className="pi pi-user text-gray-600 text-xs" />
-              <div className="text-xs text-gray-600 truncate">
-                {assignment.enseignant}
-              </div>
-            </div>
-            {index < assignments.length - 1 && <hr className="my-1" />}
-          </div>
-        ))}
+      <div className="flex justify-center items-center p-2">
+        <i className="pi pi-spin pi-spinner text-blue-500" />
       </div>
     );
-  };
-  
-  export default SurveillanceCell;
+  }
+
+  if (!assignment) {
+    return (
+      <Button
+        label="Assigner"
+        className="p-button-text p-button-sm"
+        onClick={onClick}
+      />
+    );
+  }
+
+  return (
+    <div className="p-2 bg-blue-50 rounded-md">
+      <div className="text-sm mb-2">
+        <div><strong>Local:</strong> {assignment.local}</div>
+        <div><strong>Type:</strong> {assignment.typeSurveillant}</div>
+      </div>
+      
+      <div className="flex gap-2 justify-center mt-2">
+        <Button
+          icon="pi pi-pencil"
+          className="p-button-rounded p-button-warning p-button-text p-button-sm"
+          onClick={handleEdit}
+          tooltip="Modifier"
+        />
+        <Button
+          icon="pi pi-trash"
+          className="p-button-rounded p-button-danger p-button-text p-button-sm"
+          onClick={handleDelete}
+          tooltip="Supprimer"
+        />
+      </div>
+
+      <Dialog
+        header="Modifier l'assignation"
+        visible={showEditDialog}
+        onHide={() => setShowEditDialog(false)}
+        className="w-full md:w-6"
+      >
+        <div className="grid gap-4">
+          <div className="col-12">
+            <label htmlFor="local" className="block mb-2">Local</label>
+            <Dropdown
+              id="local"
+              value={editData.local}
+              options={locaux}
+              onChange={(e) => setEditData({ ...editData, local: e.value })}
+              placeholder="Sélectionnez un local"
+              className="w-full"
+            />
+          </div>
+          
+          <div className="col-12">
+            <label htmlFor="type" className="block mb-2">Type de surveillant</label>
+            <Dropdown
+              id="type"
+              value={editData.typeSurveillant}
+              options={typesSurveillant}
+              onChange={(e) => setEditData({ ...editData, typeSurveillant: e.value })}
+              placeholder="Sélectionnez un type"
+              className="w-full"
+            />
+          </div>
+
+          <div className="col-12 flex justify-end gap-2">
+            <Button
+              label="Annuler"
+              className="p-button-text"
+              onClick={() => setShowEditDialog(false)}
+            />
+            <Button
+              label="Enregistrer"
+              onClick={handleSaveEdit}
+            />
+          </div>
+        </div>
+      </Dialog>
+    </div>
+  );
+};
+
+export default SurveillanceCell;

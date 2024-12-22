@@ -23,54 +23,82 @@ public class SurveillanceServiceImpl implements SurveillanceService {
     @Autowired private OptionRepository optionRepository;
     @Autowired private ModuleRepository moduleRepository;
 
-    @Override
     public List<Map<String, Object>> getEmploiSurveillance(Long sessionId, Long departementId) {
-            // Récupérer la session
-            Session session = sessionRepository.findById(sessionId)
-                    .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+        // Récupérer la session
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
 
-            LocalDate currentDate = session.getDateDebut();
-            LocalDate endDate = session.getDateFin();
-            List<Map<String, Object>> emploi = new ArrayList<>();
+        LocalDate currentDate = session.getDateDebut();
+        LocalDate endDate = session.getDateFin();
+        List<Map<String, Object>> emploi = new ArrayList<>();
 
-            while (!currentDate.isAfter(endDate)) {
-                Map<String, Object> dayData = new HashMap<>();
-                dayData.put("date", currentDate);
+        // Créer les créneaux horaires à partir de la session
+        List<String> slots = generateTimeSlots(session);
 
-                Map<String, List<Map<String, Object>>> horaires = new HashMap<>();
-                String[] slots = {"08:00-10:00", "10:00-12:00", "14:00-16:00", "16:00-18:00"};
-                for (String slot : slots) {
-                    List<Examen> examens = examenRepository.findByDateAndHoraireAndSessionAndDepartement(
-                            currentDate, slot, sessionId, departementId);
+        while (!currentDate.isAfter(endDate)) {
+            Map<String, Object> dayData = new HashMap<>();
+            dayData.put("date", currentDate);
 
-                    List<Map<String, Object>> surveillantsParSlot = new ArrayList<>();
+            Map<String, List<Map<String, Object>>> horaires = new HashMap<>();
+            
+            for (String slot : slots) {
+                List<Examen> examens = examenRepository.findByDateAndHoraireAndSessionAndDepartement(
+                        currentDate, slot, sessionId, departementId);
 
-                    for (Examen examen : examens) {
-                        List<SurveillanceAssignation> assignations = surveillanceAssignationRepository.findByExamenId(examen.getId());
-                        for (SurveillanceAssignation assignation : assignations) {
-                            Map<String, Object> surveillantData = new HashMap<>();
-                            surveillantData.put("enseignant", assignation.getEnseignant());
-                            surveillantData.put("typeSurveillant", assignation.getTypeSurveillant());
+                List<Map<String, Object>> surveillantsParSlot = new ArrayList<>();
 
-                            // Récupérer le local assigné au surveillant pour cet examen
-                            Local localAssigne = assignation.getLocal();
-                            surveillantData.put("local", localAssigne);
-
-                            surveillantsParSlot.add(surveillantData);
-                        }
+                for (Examen examen : examens) {
+                    List<SurveillanceAssignation> assignations = surveillanceAssignationRepository.findByExamenId(examen.getId());
+                    for (SurveillanceAssignation assignation : assignations) {
+                        Map<String, Object> surveillantData = new HashMap<>();
+                        surveillantData.put("enseignant", assignation.getEnseignant());
+                        surveillantData.put("typeSurveillant", assignation.getTypeSurveillant());
+                        surveillantData.put("local", assignation.getLocal());
+                        surveillantsParSlot.add(surveillantData);
                     }
-
-                    horaires.put(slot, surveillantsParSlot);
                 }
 
-                dayData.put("horaires", horaires);
-                emploi.add(dayData);
-                currentDate = currentDate.plusDays(1);
+                horaires.put(slot, surveillantsParSlot);
             }
 
-            return emploi;
+            dayData.put("horaires", horaires);
+            emploi.add(dayData);
+            currentDate = currentDate.plusDays(1);
         }
 
+        return emploi;
+    }
+    private List<String> generateTimeSlots(Session session) {
+        List<String> slots = new ArrayList<>();
+        
+        // Ajouter les créneaux uniquement s'ils sont définis dans la session
+        if (session.getStart1() != null && session.getEnd1() != null) {
+            slots.add(session.getStart1() + "-" + session.getEnd1());
+        }
+        if (session.getStart2() != null && session.getEnd2() != null) {
+            slots.add(session.getStart2() + "-" + session.getEnd2());
+        }
+        if (session.getStart3() != null && session.getEnd3() != null) {
+            slots.add(session.getStart3() + "-" + session.getEnd3());
+        }
+        if (session.getStart4() != null && session.getEnd4() != null) {
+            slots.add(session.getStart4() + "-" + session.getEnd4());
+        }
+        
+        return slots;
+    }
+
+    private String getPeriodeFromHoraire(String horaire, Session session) {
+        // On considère que les deux premiers créneaux sont le matin
+        if (horaire.startsWith(session.getStart1()) || horaire.startsWith(session.getStart2())) {
+            return "MATIN";
+        }
+        return "APRES_MIDI";
+    }
+
+    // Les autres méthodes restent identiques, mais utilisez session pour les horaires
+    // Par exemple dans verifierContraintesSurveillance :
+    
 
 
 
@@ -218,6 +246,9 @@ public class SurveillanceServiceImpl implements SurveillanceService {
             return assignationData;
         }).collect(Collectors.toList());
     }
+	
+    
+    
     
     
 
