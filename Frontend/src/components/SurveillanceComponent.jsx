@@ -82,20 +82,34 @@ const SurveillanceComponent = ({ sessionId }) => {
         }
     };
 
-    const loadSessionData = async () => {
+    const sortHoraires = (horaires) => {
+        return horaires.sort((a, b) => {
+          // Extraire l'heure de début
+          const startHourA = parseInt(a.split('-')[0].split(':')[0]);
+          const startHourB = parseInt(b.split('-')[0].split(':')[0]);
+          
+          // Comparer les heures
+          return startHourA - startHourB;
+        });
+      };
+      const loadSessionData = async () => {
         try {
-            const sessionData = await SessionService.getSessionById(sessionId);
-            setSession(sessionData);
-            setHoraires([
-                `${sessionData.start1}-${sessionData.end1}`,
-                `${sessionData.start2}-${sessionData.end2}`,
-                `${sessionData.start3}-${sessionData.end3}`,
-                `${sessionData.start4}-${sessionData.end4}`,
-            ]);
+          const sessionData = await SessionService.getSessionById(sessionId);
+          setSession(sessionData);
+          
+          // Créer et trier le tableau d'horaires
+          const horairesList = [
+            `${sessionData.start1}-${sessionData.end1}`,
+            `${sessionData.start2}-${sessionData.end2}`,
+            `${sessionData.start3}-${sessionData.end3}`,
+            `${sessionData.start4}-${sessionData.end4}`,
+          ];
+          
+          setHoraires(sortHoraires(horairesList));
         } catch (error) {
-            showError('Erreur lors du chargement de la session');
+          showError('Erreur lors du chargement de la session');
         }
-    };
+      };
     const loadSurveillanceAssignments = async () => {
         if (!sessionId || !selectedDepartement) return;
         
@@ -161,71 +175,128 @@ const SurveillanceComponent = ({ sessionId }) => {
     };
     const headerGroup = useMemo(() => {
         if (!session || !horaires.length) return null;
-    
+      
         const dates = [];
         let currentDate = new Date(session.dateDebut);
-        while (currentDate <= new Date(session.dateFin)) {
-            // Format the date as "Matin 2024-11-24" or "Apresmidi"
-            dates.push(formatDate(currentDate));
-            currentDate.setDate(currentDate.getDate() + 1);
+        const endDate = new Date(session.dateFin);
+      
+        while (currentDate <= endDate) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          
+          // First add morning periods
+          horaires
+            .filter(horaire => {
+              const [startTime] = horaire.split('-');
+              const hour = parseInt(startTime.split(':')[0]);
+              return hour < 12;
+            })
+            .sort((a, b) => {
+              const hourA = parseInt(a.split('-')[0].split(':')[0]);
+              const hourB = parseInt(b.split('-')[0].split(':')[0]);
+              return hourA - hourB;
+            })
+            .forEach(horaire => {
+              dates.push({
+                date: dateStr,
+                horaire: horaire,
+                periode: 'Matin',
+                sortOrder: parseInt(horaire.split('-')[0].split(':')[0])
+              });
+            });
+      
+          // Then add afternoon periods
+          horaires
+            .filter(horaire => {
+              const [startTime] = horaire.split('-');
+              const hour = parseInt(startTime.split(':')[0]);
+              return hour >= 12;
+            })
+            .sort((a, b) => {
+              const hourA = parseInt(a.split('-')[0].split(':')[0]);
+              const hourB = parseInt(b.split('-')[0].split(':')[0]);
+              return hourA - hourB;
+            })
+            .forEach(horaire => {
+              dates.push({
+                date: dateStr,
+                horaire: horaire,
+                periode: 'Après-midi',
+                sortOrder: parseInt(horaire.split('-')[0].split(':')[0]) + 12 // Add 12 to ensure afternoon times sort after morning
+              });
+            });
+      
+          currentDate.setDate(currentDate.getDate() + 1);
         }
-    
+      
         return (
-            <ColumnGroup>
+          <ColumnGroup>
             <Row>
-                <Column header="Enseignants" rowSpan={2} frozen style={{ width: '200px' }} />
-                {dates.map(date => (
+              <Column header="Enseignants" rowSpan={2} frozen style={{ width: '200px' }} />
+              {dates.map(({ date, periode }, index) => {
+                // Compter combien d'horaires sont dans la même période pour ce jour
+                const periodesCount = dates.filter(
+                  d => d.date === date && d.periode === periode
+                ).length;
+                
+                // Ne créer l'en-tête que pour la première occurrence de chaque période
+                if (index === 0 || 
+                    dates[index - 1].date !== date || 
+                    dates[index - 1].periode !== periode) {
+                  return (
                     <Column
-                        key={date}
-                        header={date}
-                        colSpan={horaires.length}
-                        style={{ textAlign: 'center', color: 'red' }} // Centrer la date
+                      key={`${date}_${periode}`}
+                      header={`${periode} ${date}`}
+                      colSpan={periodesCount}
+                      style={{ textAlign: 'center' }}
                     />
-                ))}
+                  );
+                }
+                return null;
+              }).filter(Boolean)}
             </Row>
             <Row>
-                {dates.map(date => (
-                    horaires.map(horaire => (
-                        <Column
-                            key={`${date}_${horaire}`}
-                            header={horaire}
-                            style={{ textAlign: 'center' }} // Centrer les horaires
-                        />
-                    ))
-                ))}
+              {dates.map(({ horaire, date }) => (
+                <Column
+                  key={`${date}_${horaire}`}
+                  header={horaire}
+                  style={{ textAlign: 'center' }}
+                />
+              ))}
             </Row>
-        </ColumnGroup>
-        
+          </ColumnGroup>
         );
-    }, [session, horaires]);
-    
+      }, [session, horaires]);
+      
    
     
 
-    const tableData = useMemo(() => {
+      const tableData = useMemo(() => {
         if (!session || !enseignants.length) return [];
         
         const dates = [];
         let currentDate = new Date(session.dateDebut);
-        while (currentDate <= new Date(session.dateFin)) {
-            dates.push(new Date(currentDate).toISOString().split('T')[0]);
-            currentDate.setDate(currentDate.getDate() + 1);
+        const endDate = new Date(session.dateFin);
+      
+        while (currentDate <= endDate) {
+          dates.push(currentDate.toISOString().split('T')[0]);
+          currentDate.setDate(currentDate.getDate() + 1);
         }
-
+      
         return enseignants.map(enseignant => {
-            const row = { 
-                enseignant: `${enseignant.nom} ${enseignant.prenom}`,
-                enseignantId: enseignant.id 
-            };
-            dates.forEach(date => {
-                horaires.forEach(horaire => {
-                    row[`${date}_${horaire}`] = { date, horaire };
-                });
+          const row = { 
+            enseignant: `${enseignant.nom} ${enseignant.prenom}`,
+            enseignantId: enseignant.id 
+          };
+          
+          dates.forEach(date => {
+            sortHoraires(horaires).forEach(horaire => {
+              row[`${date}_${horaire}`] = { date, horaire };
             });
-            return row;
+          });
+          
+          return row;
         });
-    }, [enseignants, session, horaires]);
-
+      }, [enseignants, session, horaires]);
 
     const handleAssignSurveillant = (exam) => {
         if (!exam) {
@@ -441,18 +512,54 @@ const deleteAssignment = async (assignment) => {
             // Get surveillance data and assignments
             const surveillanceData = await SurveillanceService.getEmploiSurveillance(sessionId, selectedDepartement);
     
-            // Build the table headers
+            // Build the table headers and organize dates/time slots with proper sorting
             const headers = ["Enseignants"];
             const dateColumns = [];
     
-            // Organize dates and time slots
+            // First, collect all unique dates
+            const dates = new Set();
             surveillanceData.forEach((jour) => {
-                Object.keys(jour.horaires).forEach((horaire) => {
-                    const [startHour] = horaire.split("-").map((h) => parseInt(h.split(":")[0], 10));
-                    const periode = startHour < 12 ? "Matin" : "Après-midi";
-                    const columnKey = `${periode} ${jour.date} ${horaire}`;
-                    headers.push(columnKey);
-                    dateColumns.push({ date: jour.date, horaire });
+                dates.add(jour.date);
+            });
+    
+            // For each date, organize morning then afternoon periods
+            [...dates].sort().forEach(date => {
+                const periodsForDate = [];
+                
+                // Get all time slots for this date
+                surveillanceData
+                    .filter(jour => jour.date === date)
+                    .forEach(jour => {
+                        Object.keys(jour.horaires).forEach(horaire => {
+                            const [startHour] = horaire.split("-").map(h => parseInt(h.split(":")[0], 10));
+                            periodsForDate.push({
+                                date,
+                                horaire,
+                                startHour,
+                                periode: startHour < 12 ? "Matin" : "Après-midi"
+                            });
+                        });
+                    });
+    
+                // Sort periods for this date
+                periodsForDate.sort((a, b) => {
+                    // First sort by period (Matin comes before Après-midi)
+                    if (a.periode !== b.periode) {
+                        return a.periode.localeCompare(b.periode);
+                    }
+                    // Then sort by start hour
+                    return a.startHour - b.startHour;
+                });
+    
+                // Add sorted periods to dateColumns and headers
+                periodsForDate.forEach(period => {
+                    dateColumns.push({
+                        date: period.date,
+                        horaire: period.horaire
+                    });
+                    
+                    const columnHeader = `${period.periode}\n${period.date}\n${period.horaire}`;
+                    headers.push(columnHeader);
                 });
             });
     
@@ -475,7 +582,7 @@ const deleteAssignment = async (assignment) => {
                     // Build column key
                     const [startHour] = horaire.split("-").map((h) => parseInt(h.split(":")[0], 10));
                     const periode = startHour < 12 ? "Matin" : "Après-midi";
-                    const columnKey = `${periode} ${date} ${horaire}`;
+                    const columnKey = `${periode}\n${date}\n${horaire}`;
     
                     // Set cell value based on assignment
                     if (teacherAssignment) {
@@ -488,9 +595,9 @@ const deleteAssignment = async (assignment) => {
                 return rowData;
             });
     
-            // Create Excel worksheet
+            // Create and style Excel worksheet
             const ws = XLSX.utils.json_to_sheet(enseignantsData, { header: headers });
-    
+            
             // Adjust column widths
             const colWidths = headers.map((_, idx) => ({ wch: idx === 0 ? 25 : 30 }));
             ws['!cols'] = colWidths;
@@ -554,11 +661,60 @@ const deleteAssignment = async (assignment) => {
     const handleExportPDF = async () => {
         try {
             setLoading(true);
+            
+            // Récupérer les données de surveillance
+            const surveillanceData = await SurveillanceService.getEmploiSurveillance(sessionId, selectedDepartement);
+            
+            // Préparer les colonnes de dates comme dans l'export Excel
+            const dateColumns = [];
+            surveillanceData.forEach((jour) => {
+                Object.keys(jour.horaires).forEach((horaire) => {
+                    dateColumns.push({ date: jour.date, horaire });
+                });
+            });
+    
+            // Préparer les données des enseignants comme dans l'export Excel
+            const enseignantsData = enseignants.map((enseignant) => {
+                const rowData = {
+                    "Enseignants": `${enseignant.nom} ${enseignant.prenom}`
+                };
+    
+                // Pour chaque date/horaire
+                dateColumns.forEach(({ date, horaire }) => {
+                    const key = `${date}_${horaire}`;
+                    const assignmentsList = surveillanceAssignments[key];
+                    
+                    // Trouver l'assignation pour l'enseignant actuel
+                    const teacherAssignment = assignmentsList?.find(
+                        assignment => assignment.enseignant === `${enseignant.nom} ${enseignant.prenom}`
+                    );
+    
+                    // Construire la clé de colonne
+                    const [startHour] = horaire.split("-").map((h) => parseInt(h.split(":")[0], 10));
+                    const periode = startHour < 12 ? "Matin" : "Après-midi";
+                    const columnKey = `${periode} ${date} ${horaire}`;
+    
+                    // Définir la valeur de la cellule
+                    if (teacherAssignment) {
+                        rowData[columnKey] = `Local: ${teacherAssignment.local}\nType: ${teacherAssignment.typeSurveillant}`;
+                    } else {
+                        rowData[columnKey] = "Non assigné";
+                    }
+                });
+    
+                return rowData;
+            });
+    
+            // Appeler la fonction d'exportation PDF avec les mêmes données que l'Excel
             await SurveillanceService.exporterSurveillancesPDF(
                 sessionId,
                 selectedDepartement,
+                enseignantsData,
+                surveillanceAssignments,
+                dateColumns,
                 toast.current
             );
+    
         } catch (error) {
             toast.current.show({
                 severity: 'error',
@@ -570,7 +726,6 @@ const deleteAssignment = async (assignment) => {
             setLoading(false);
         }
     };
-
     
       
       const locauxTemplate = (rowData) => (
