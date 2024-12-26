@@ -108,10 +108,54 @@ const handleTimeChange = (index, field, value) => {
           tooltipOptions={{ position: 'top' }}
           style={{ margin: '0 0.1rem' }}
         />
+         <Button
+        icon={rowData.confirmed ? "pi pi-times-circle" : "pi pi-check-circle"}
+        rounded
+        outlined
+        severity={rowData.confirmed ? "warning" : "success"}
+        onClick={() => handleConfirm(rowData)}
+        tooltip={rowData.confirmed ? "Annuler la confirmation" : "Confirmer"}
+        tooltipOptions={{ position: 'top' }}
+        style={{ margin: '0 0.1rem' }}
+      />
        
       </div>
     );
   };
+  const handleConfirm = (session) => {
+    const action = session.confirmed ? 'annuler la confirmation de' : 'confirmer';
+    
+    Swal.fire({
+      title: `${session.confirmed ? 'Annuler la confirmation' : 'Confirmer'} la session`,
+      text: `Voulez-vous ${action} cette session ?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: `Oui, ${action}!`,
+      cancelButtonText: 'Annuler'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await SessionService.confirmSession(session.id);
+          Swal.fire(
+            session.confirmed ? 'Confirmation annulée!' : 'Confirmée!',
+            `La session a été ${session.confirmed ? 'annulée' : 'confirmée'} avec succès.`,
+            'success'
+          );
+          const response = await SessionService.getSessions();
+          setSessions(response);
+        } catch (error) {
+          Swal.fire(
+            'Erreur',
+            'Une erreur est survenue.',
+            'error'
+          );
+        }
+      }
+    });
+  };
+
 
   const handleEdit = (session) => {
     setDialogTitle("Modifier ")

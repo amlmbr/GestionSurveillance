@@ -5,6 +5,7 @@ import com.example.jeeproject.entity.Enseignant;
 import com.example.jeeproject.entity.SurveillanceAssignation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -63,4 +64,6 @@ public interface SurveillanceAssignationRepository extends JpaRepository<Surveil
 
 
     Optional<SurveillanceAssignation> findById(Long id);
+    @Query("SELECT sa FROM SurveillanceAssignation sa WHERE sa.enseignant.id = :enseignantId AND sa.examen.date = :date")
+    List<SurveillanceAssignation> findByEnseignantAndDate(@Param("enseignantId") Long enseignantId, @Param("date") LocalDate date);
 }
