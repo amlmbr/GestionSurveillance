@@ -16,9 +16,7 @@ public interface SurveillanceService {
     boolean assignerSurveillant(AssignSurveillantRequest request);
     
     List<Enseignant> getEnseignantsDisponibles(Long departementId, LocalDate date, String periode);
-    
-    List<Local> getLocauxDisponibles(LocalDate date, String horaire);
-    
+
     boolean verifierContraintesSurveillance(Long examenId, Long enseignantId, Long localId, String typeSurveillant);
     
     List<Map<String, Object>> getAssignationsSurveillance(Long sessionId, Long departementId, LocalDate date);

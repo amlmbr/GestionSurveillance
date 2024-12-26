@@ -65,3 +65,16 @@ export const getLocalById = async (id) => {
     throw error; // Relance l'erreur
   }
 };
+export const getLocaDispo = async (date,heure) => {
+  try {
+    const response = await axiosInstance.get(`${API_URL}/locaux-disponibles/${date}/${heure}`);
+    return response.data; // Retourne les données du local trouvé
+  } catch (error) {
+    console.error(
+      `Erreur lors de la récupération du local dispo`,
+      error
+    );
+    throw error; // Relance l'erreur
+  }
+};
+

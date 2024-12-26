@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -45,4 +46,11 @@ public class LocalController {
         localService.deleteLocal(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/locaux-disponibles/{date}/{horaire}")
+    public ResponseEntity getLocauxDisponibles(
+            @PathVariable LocalDate date,
+            @PathVariable String horaire) {
+        return ResponseEntity.ok(localService.getLocauxDisponibles(date, horaire));
+    }
+
 }

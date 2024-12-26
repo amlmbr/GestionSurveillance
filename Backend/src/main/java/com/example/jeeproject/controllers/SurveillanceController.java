@@ -72,12 +72,6 @@ public class SurveillanceController {
         return ResponseEntity.ok(surveillanceService.getEnseignantsDisponibles(departementId, date, periode));
     }
 
-    @GetMapping("/locaux-disponibles")
-    public ResponseEntity getLocauxDisponibles(
-            @RequestParam LocalDate date,
-            @RequestParam String horaire) {
-        return ResponseEntity.ok(surveillanceService.getLocauxDisponibles(date, horaire));
-    }
 
     @PostMapping("/assigner")
     public ResponseEntity<?> assignerSurveillant(@RequestBody AssignSurveillantRequest request) {

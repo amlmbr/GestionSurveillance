@@ -7,7 +7,7 @@ import {
   getOptionsByDepartement,
 } from "../services/departementService";
 import {getModulesByOptionId} from "../services/optionService"
-import { getLocaux } from "../services/locauxService";
+import { getLocaDispo } from "../services/locauxService";
 import { Checkbox } from 'primereact/checkbox';
 // PrimeReact Imports
 import { Calendar } from "primereact/calendar";
@@ -107,11 +107,10 @@ const ExamTable = ({ sessionId }) => {
       try {
         const sessionData = await SessionService.getSessionById(sessionId);
         const departementData = await getDepartements();
-        const locauxData = await getLocaux();
-
+       
         setSession(sessionData);
         setDepartements(departementData);
-        setLocaux(locauxData);
+       
 
         const horairesArray = [
           `${sessionData.start1}-${sessionData.end1}`,
@@ -505,7 +504,13 @@ const ExamTable = ({ sessionId }) => {
             label="Ajouter un examen"
             icon="pi pi-plus-circle"
             className="p-button-success"
-            onClick={() => setShowAddExamDialog(true)}
+            onClick={async () => {setShowAddExamDialog(true)
+              console.log(state.selectedCell?.date,state.selectedCell?.horaire)
+              const locauxData = await getLocaDispo(state.selectedCell?.date,state.selectedCell?.horaire);
+              setLocaux(locauxData);
+
+            }
+            }
           />
         }
       >

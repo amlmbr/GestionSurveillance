@@ -205,10 +205,7 @@ public class SurveillanceServiceImpl implements SurveillanceService {
         return surveillanceAssignationRepository.findEnseignantsDisponiblesPourSurveillance(departementId, date, periode);
     }
 
-    @Override
-    public List<Local> getLocauxDisponibles(LocalDate date, String horaire) {
-        return localRepository.findLocauxDisponibles(date, horaire);
-    }
+
 
     private String getPeriodeFromHoraire(String horaire) {
         return horaire.startsWith("start1") || horaire.startsWith("start2") ? "MATIN" : "APRES_MIDI";

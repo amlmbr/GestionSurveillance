@@ -14,9 +14,18 @@ public interface LocalRepository extends JpaRepository<Local, Long> {
     @Query("SELECT l FROM Local l WHERE l.estDisponible = true")
     List<Local> findDisponibles();
 
-    @Query("SELECT l FROM Local l WHERE l.estDisponible = true " +
-           "AND l.id NOT IN (SELECT sa.local.id FROM SurveillanceAssignation sa " +
-           "WHERE sa.examen.date = :date AND sa.examen.horaire = :horaire)")
+    @Query(value = "SELECT * " +
+            "FROM local l " +
+            "WHERE l.`est_disponible` = true " +
+            "AND l.id NOT IN ( " +
+            "  SELECT e.local_id " +
+            "  FROM examen ex, examen_locaux e " +
+            "  WHERE ex.date = :date AND ex.horaire = :horaire " +
+            "  AND ex.id = e.examen_id " +
+            ")", nativeQuery = true)
     List<Local> findLocauxDisponibles(LocalDate date, String horaire);
+
     Optional<Local> findLocalByNom(String nom);
+
+
 }
