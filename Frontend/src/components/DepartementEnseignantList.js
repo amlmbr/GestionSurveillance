@@ -226,7 +226,7 @@ const DepartementEnseignantList = () => {
           tooltip="Modifier"
           tooltipOptions={{ position: 'top' }}
         />
-        <Button
+        {/* <Button
           icon="pi pi-trash"
           rounded
           outlined
@@ -234,7 +234,7 @@ const DepartementEnseignantList = () => {
           onClick={() => handleDelete(rowData.id)}
           tooltip="Supprimer"
           tooltipOptions={{ position: 'top' }}
-        />
+        /> */}
         <Button
           icon="pi pi-times"
           rounded
