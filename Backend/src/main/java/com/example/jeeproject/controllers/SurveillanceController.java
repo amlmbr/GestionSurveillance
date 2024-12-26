@@ -5,6 +5,8 @@ import com.example.jeeproject.dto.AssignSurveillantRequest;
 import com.example.jeeproject.entity.Enseignant;
 import com.example.jeeproject.entity.Examen;
 import com.example.jeeproject.entity.Local;
+import com.example.jeeproject.entity.SurveillanceAssignation;
+import com.example.jeeproject.services.AutoSurveillanceService;
 import com.example.jeeproject.services.SurveillanceService;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -25,6 +27,8 @@ public class SurveillanceController {
 
     @Autowired
     private SurveillanceService surveillanceService;
+    @Autowired
+    private AutoSurveillanceService autoSurveillanceService;
 
    
     @GetMapping("/emploi")
@@ -140,6 +144,16 @@ public class SurveillanceController {
                     "success", false,
                     "message", "Erreur lors de la suppression: " + e.getMessage()
                 ));
+        }
+    }
+    @PostMapping("/auto-assign/{sessionId}")
+    public ResponseEntity<?> assignerSurveillanceAutomatique(@PathVariable Long sessionId) {
+        try {
+            List<SurveillanceAssignation> assignments = autoSurveillanceService.assignerSurveillanceAutomatique(sessionId);
+            return ResponseEntity.ok(assignments);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 

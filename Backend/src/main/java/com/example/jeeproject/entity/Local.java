@@ -23,18 +23,8 @@ public class Local {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    
-    @ManyToOne
-    @JoinColumn(name = "departement_id")
-    private Departement departement;
 
 
-    public Departement getDepartement() {
-		return departement;
-	}
-	public void setDepartement(Departement departement) {
-		this.departement = departement;
-	}
 	@NotBlank(message = "Le nom est obligatoire")
     private String nom;
 

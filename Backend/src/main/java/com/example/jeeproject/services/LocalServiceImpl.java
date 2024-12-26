@@ -31,11 +31,12 @@ public class LocalServiceImpl implements LocalService {
     }
     @Override
     public Local createLocal(Local local) {
-
-        if(localRepository.findLocalByNom(local.getNom()) == null)
+        if (localRepository.findLocalByNom(local.getNom()).isPresent()) {
+            return null;
+        }
         return localRepository.save(local);
-        return null;
     }
+
 
     @Override
     public Local updateLocal(Long id, Local local) {

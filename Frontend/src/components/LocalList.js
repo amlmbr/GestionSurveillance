@@ -136,6 +136,7 @@ const LocalList = () => {
    }
 
    if (modalMode === 'add') {
+    console.log("taped")
      addLocal(currentLocal)
        .then(() => {
          loadLocaux();

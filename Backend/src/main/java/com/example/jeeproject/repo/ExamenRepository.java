@@ -18,6 +18,8 @@ public interface ExamenRepository extends JpaRepository<Examen, Long> {
      List<Examen> findByDateAndHoraireAndSessionAndDepartement(
          LocalDate date, String horaire, Long sessionId, Long departementId);
     long countBySession(Session session);
+    @Query("SELECT e FROM Examen e WHERE e.session.id = :sessionId")
+    List<Examen> findExamsBySessionId(Long sessionId);
 
 }
 

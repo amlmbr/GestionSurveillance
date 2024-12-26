@@ -22,4 +22,5 @@ public interface EnseignantRepository extends JpaRepository<Enseignant, Long> {
      List<Enseignant> findEnseignantsDisponiblesPourSurveillance(
          Long departementId, LocalDate date, String periode);
     long countByEstDispense(boolean estDispense);
+    List<Enseignant> findEnseignantByEstDispenseFalse();
 }
