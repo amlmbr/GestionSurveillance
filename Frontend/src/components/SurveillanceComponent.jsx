@@ -54,6 +54,8 @@ const SurveillanceComponent = ({ sessionId }) => {
     useEffect(() => {
         loadDepartements();
         loadSessionData();
+        
+        
     }, []);
 
     useEffect(() => {
@@ -96,7 +98,7 @@ const SurveillanceComponent = ({ sessionId }) => {
         try {
           const sessionData = await SessionService.getSessionById(sessionId);
           setSession(sessionData);
-          
+       
           // Créer et trier le tableau d'horaires
           const horairesList = [
             `${sessionData.start1}-${sessionData.end1}`,
@@ -116,7 +118,7 @@ const SurveillanceComponent = ({ sessionId }) => {
         try {
             setLoading(true);
             const assignments = await SurveillanceService.getSurveillanceAssignments(sessionId, selectedDepartement);
-            console.log("hi ",assignments)
+            console.log("session",session)
             setSurveillanceAssignments(assignments);
         } catch (error) {
             console.error('Erreur de chargement des assignations:', error);
@@ -443,37 +445,37 @@ const deleteAssignment = async (assignment) => {
     }
 };
    
-    const renderCellContent = (rowData, field) => {
-        if (!rowData[field] || !field) {
-            return null;
-        }
-        const date = rowData[field].date;
-        const horaire = rowData[field].horaire;
-        const enseignantId = rowData.enseignantId;
-        
-        if (!date || !horaire) {
-            return null;
-        }
-        const key = `${date}_${horaire}`;
-        const assignmentsList = surveillanceAssignments[key];
-        
-        if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
-            return <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
-        }
-        
-        // Filtrer les surveillances pour ne montrer que celles du professeur courant
-        const professorAssignments = assignmentsList?.filter(
-            assignment => assignment.enseignant === rowData.enseignant
-        );
-        
-        if (professorAssignments && professorAssignments.length > 0) {
-            return (
-                <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#e3f2fd' }}>
-                    {professorAssignments.map((assignment, index) => (
-                        <div key={index} className="mb-2">
-                            <div className="flex flex-column">
-                                <div><strong>Local:</strong> {assignment.local}</div>
-                                <div><strong>Type:</strong> {assignment.typeSurveillant}</div>
+const renderCellContent = (rowData, field) => {
+    if (!rowData[field] || !field) {
+        return null;
+    }
+    const date = rowData[field].date;
+    const horaire = rowData[field].horaire;
+    const enseignantId = rowData.enseignantId;
+    
+    if (!date || !horaire) {
+        return null;
+    }
+    const key = `${date}_${horaire}`;
+    const assignmentsList = surveillanceAssignments[key];
+    
+    if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
+        return <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
+    }
+    
+    const professorAssignments = assignmentsList?.filter(
+        assignment => assignment.enseignant === rowData.enseignant
+    );
+    
+    if (professorAssignments && professorAssignments.length > 0) {
+        return (
+            <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#e3f2fd' }}>
+                {professorAssignments.map((assignment, index) => (
+                    <div key={index} className="mb-2">
+                        <div className="flex flex-column">
+                            <div><strong>Local:</strong> {assignment.local}</div>
+                            <div><strong>Type:</strong> {assignment.typeSurveillant}</div>
+                            {!session?.confirmed && (
                                 <div className="flex justify-content-center gap-2 mt-2">
                                     <Button
                                         icon="pi pi-pencil"
@@ -486,25 +488,25 @@ const deleteAssignment = async (assignment) => {
                                         className="p-button-rounded p-button-danger p-button-text"
                                         onClick={() => handleDeleteAssignment(assignment)}
                                         tooltip="Supprimer"
-                                        disabled={false} // Désactiver si pas d'ID
+                                        disabled={false}
                                     />
                                 </div>
-                            </div>
+                            )}
                         </div>
-                    ))}
-                </div>
-            );
-        } else {
-            return (
-                <Button
-                    label="Assigner"
-                    className="p-button-text p-button-sm"
-                    onClick={() => handleCellClick(date, horaire, enseignantId)}
-                />
-            );
-        }
-    };
-    
+                    </div>
+                ))}
+            </div>
+        );
+    } else {
+        return !session?.confirmed ? (
+            <Button
+                label="Assigner"
+                className="p-button-text p-button-sm"
+                onClick={() => handleCellClick(date, horaire, enseignantId)}
+            />
+        ) : null;
+    }
+};
     const handleExportSurveillances = async () => {
         try {
             setLoading(true);

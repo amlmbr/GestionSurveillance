@@ -60,6 +60,15 @@ const SessionService = {
       throw error;
     }
   },
+  confirmSession: async (sessionId) => {
+    try {
+      const response = await axiosInstance.post(`api/surveillance/auto-assign/${sessionId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error confirm session with ID ${sessionId}:`, error);
+      throw error;
+    }
+  },
 
    
 };

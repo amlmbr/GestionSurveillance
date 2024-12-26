@@ -28,6 +28,7 @@ public class Session {
     private String end3;
     private String start4;
     private String end4;
+	private boolean confirmed;
 	public Long getId() {
 		return id;
 	}

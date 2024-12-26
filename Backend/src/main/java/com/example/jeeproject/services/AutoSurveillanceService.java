@@ -1,25 +1,18 @@
 package com.example.jeeproject.services;
 
 import com.example.jeeproject.entity.*;
-import com.example.jeeproject.repo.EnseignantRepository;
-import com.example.jeeproject.repo.ExamenRepository;
-import com.example.jeeproject.repo.SessionRepository;
-import com.example.jeeproject.repo.SurveillanceAssignationRepository;
+import com.example.jeeproject.repo.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class AutoSurveillanceService {
 
-    @Autowired
-    private ExamenRepository examenRepository;
+    @Autowired private ExamenRepository examenRepository;
     @Autowired private EnseignantRepository enseignantRepository;
     @Autowired private SurveillanceAssignationRepository surveillanceAssignationRepository;
     @Autowired private SessionRepository sessionRepository;
@@ -28,44 +21,84 @@ public class AutoSurveillanceService {
     public List<SurveillanceAssignation> assignerSurveillanceAutomatique(Long sessionId) {
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+        session.setConfirmed(!session.isConfirmed());
+        sessionRepository.save(session);
+        if(session.isConfirmed()) {
+            List<SurveillanceAssignation> assignments = new ArrayList<>();
+            List<Examen> examens = examenRepository.findExamsBySessionId(sessionId);
+            List<Enseignant> enseignantsDisponibles = enseignantRepository.findEnseignantByEstDispenseFalse();
 
-        List<SurveillanceAssignation> assignments = new ArrayList<>();
-        List<Examen> examens = examenRepository.findExamsBySessionId(sessionId);
-        List<Enseignant> enseignantsDisponibles = enseignantRepository.findEnseignantByEstDispenseFalse();
+            examens.sort(Comparator.comparing(Examen::getDate).thenComparing(Examen::getHoraire));
 
-        examens.sort(Comparator.comparing(Examen::getDate).thenComparing(Examen::getHoraire));
+            for (Examen examen : examens) {
+                for (Local local : examen.getLocaux()) {
+                    // First, assign the module leader if available
+                    Optional<Enseignant> moduleLeader = enseignantsDisponibles.stream()
+                            .filter(e -> e.getModulesResponsables().stream()
+                                    .anyMatch(module -> module.getId().equals(examen.getModuleExamen().getId())))
+                            .findFirst();
 
-        for (Examen examen : examens) {
-            for (Local local : examen.getLocaux()) {
-                int nbSurveillantsLocal = local.getNbSurveillants();
+                    int remainingSurveillants = local.getNbSurveillants();
 
-                for (int i = 0; i < nbSurveillantsLocal; i++) {
-                    Optional<Enseignant> surveillant = trouverSurveillantDisponible(
+                    if (moduleLeader.isPresent() && !enseignantDejaAssignePourPeriode(moduleLeader.get().getId(), examen.getDate(), examen.getHoraire())) {
+                        SurveillanceAssignation ttAssignation = creerAssignation(
+                                examen,
+                                moduleLeader.get(),
+                                local,
+                                "TT",
+                                session
+                        );
+                        assignments.add(surveillanceAssignationRepository.save(ttAssignation));
+                        // Don't increment surveillance count for TT
+                    }
+
+                    // Find remaining surveillants excluding the module leader
+                    List<Enseignant> surveillantsForLocal = trouverSurveillantsDisponibles(
                             enseignantsDisponibles,
                             examen.getDate(),
                             examen.getHoraire(),
-                            examen.getDepartement().getId()
+                            examen.getDepartement().getId(),
+                            remainingSurveillants,
+                            moduleLeader.orElse(null)
                     );
 
-                    if (surveillant.isPresent()) {
+                    for (Enseignant surveillant : surveillantsForLocal) {
                         SurveillanceAssignation assignation = creerAssignation(
                                 examen,
-                                surveillant.get(),
+                                surveillant,
                                 local,
-                                i == 0 ? "PRINCIPAL" : "ASSISTANT",
+                                "PRINCIPAL",
                                 session
                         );
-
                         assignments.add(surveillanceAssignationRepository.save(assignation));
-                        incrementerNbSurveillances(surveillant.get());
+                        incrementerNbSurveillances(surveillant);
                     }
                 }
             }
+            return assignments;
         }
+        return null;
 
-        return assignments;
     }
 
+    private List<Enseignant> trouverSurveillantsDisponibles(
+            List<Enseignant> enseignants,
+            LocalDate date,
+            String horaire,
+            Long departementId,
+            int nbRequired,
+            Enseignant moduleLeader) {
+
+        return enseignants.stream()
+                .filter(e -> e.getDepartement().getId().equals(departementId))
+                .filter(e -> !enseignantDejaAssignePourPeriode(e.getId(), date, horaire))
+                .filter(e -> moduleLeader == null || !e.getId().equals(moduleLeader.getId()))
+                .sorted(Comparator.comparing(Enseignant::getNbSurveillances))
+                .limit(nbRequired)
+                .toList();
+    }
+
+    // Other methods remain unchanged
     private SurveillanceAssignation creerAssignation(
             Examen examen,
             Enseignant enseignant,
@@ -86,29 +119,14 @@ public class AutoSurveillanceService {
         return assignation;
     }
 
-    private Optional<Enseignant> trouverSurveillantDisponible(
-            List<Enseignant> enseignants,
-            LocalDate date,
-            String horaire,
-            Long departementId) {
-
-        return enseignants.stream()
-                .filter(e -> !surveillanceAssignationRepository
-                        .existsByEnseignantAndDateAndPeriode(
-                                e.getId(),
-                                date,
-                                getPeriodeFromHoraire(horaire)
-                        ))
-                .min(Comparator.comparing(Enseignant::getNbSurveillances));
+    private boolean enseignantDejaAssignePourPeriode(Long enseignantId, LocalDate date, String horaire) {
+        return surveillanceAssignationRepository.findByEnseignantAndDate(enseignantId, date)
+                .stream()
+                .anyMatch(sa -> sa.getExamen().getHoraire().equals(horaire));
     }
 
     private void incrementerNbSurveillances(Enseignant enseignant) {
         enseignant.setNbSurveillances(enseignant.getNbSurveillances() + 1);
         enseignantRepository.save(enseignant);
-    }
-
-    private String getPeriodeFromHoraire(String horaire) {
-        return horaire.startsWith("start1") || horaire.startsWith("start2")
-                ? "MATIN" : "APRES_MIDI";
     }
 }
