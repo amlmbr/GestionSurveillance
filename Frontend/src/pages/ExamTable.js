@@ -289,6 +289,8 @@ const ExamTable = ({ sessionId }) => {
       departement: exam.departement,
       option: exam.option,
     });
+    const combinedLocaux = [...locaux, ...exam.locaux];
+    setLocaux(combinedLocaux);
     setEditingExam(exam);
     setShowAddExamDialog(true);
   };
@@ -578,7 +580,13 @@ const ExamTable = ({ sessionId }) => {
                       icon="pi pi-pencil"
                       className="p-button-rounded p-button-text"
                       tooltip="Modifier"
-                      onClick={() => handleEditExam(rowData)}
+                      onClick={async () => {
+                        console.log(state.selectedCell?.date,state.selectedCell?.horaire)
+                        const locauxData = await getLocaDispo(state.selectedCell?.date,state.selectedCell?.horaire);
+                        setLocaux(locauxData);          
+                        handleEditExam(rowData)
+
+                      }}
                     />
                     <Button
                       icon="pi pi-trash"
