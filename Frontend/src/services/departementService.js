@@ -95,25 +95,7 @@ export const getEnseignantsByDepartement = async (departementId) => {
   }
 };
 
-export const removeEnseignantFromDepartement = async (
-  enseignantId,
-  departementId
-) => {
-  try {
-console.log(
-  'FROM SERVICE ----> le id de lenseignat : ' +
-    enseignantId +
-    '--le id de depatement : ' +
-    departementId
-);    const response = await axiosInstance.patch(
-      `${API_URL}/${departementId}/enseignants/${enseignantId}/remove`
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Erreur lors de la suppression du département:', error);
-    throw error;
-  }
-};
+
 
 // Récupérer toutes les options d'un département
 export const getOptionsByDepartement = async (departementId) => {

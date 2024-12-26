@@ -25,6 +25,7 @@ import "primeicons/primeicons.css";
 import SurveillanceComponent from "./components/SurveillanceComponent";
 import { useSession } from "./contexte/SessionContext";
 import { SessionProvider } from "./contexte/SessionContext";
+import ChatBot from './components/ChatBot';
 
 function LayoutWithSidebar({ children }) {
   const location = useLocation();
@@ -68,6 +69,11 @@ function LayoutWithSidebar({ children }) {
       path: '/enseignant',
       label: 'Gestion des Enseignants',
       icon: 'pi pi-users',
+    },
+    {
+      path: '/chatbot',
+      label: 'Assistant Virtual',
+      icon: 'pi pi-comments',
     },
     {
       path: '/module',
@@ -326,6 +332,7 @@ function AppContent() {
           <Routes>
             <Route path="/session/:id" element={<SessionDetails />} />
             <Route path="/enseignant" element={<EnseignantList />} />
+            <Route path="/chatbot" element={<ChatBot />} />
             <Route path="/local" element={<LocalList />} />
             <Route path="/module" element={<ModuleList />} />
             <Route path="/option" element={<OptionList />} />
