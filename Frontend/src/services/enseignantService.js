@@ -53,6 +53,26 @@ export const deleteEnseignant = async (id) => {
   }
 };
 
+export const removeEnseignantFromDepartement = async (
+  enseignantId,
+  departementId
+) => {
+  try {
+    const response = await axiosInstance.delete(
+      `${API_URL}/${enseignantId}/departement/${departementId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Erreur lors de la suppression de l'enseignant ${enseignantId} du département ${departementId}:`,
+      error
+    );
+    throw error;
+  }
+};
+
+
+
 export const getEnseignantById = async (id) => {
   try {
     const response = await axiosInstance.get(`${API_URL}/${id}`);

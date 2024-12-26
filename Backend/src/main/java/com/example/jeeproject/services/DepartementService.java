@@ -15,5 +15,6 @@ public interface DepartementService {
     List<Enseignant> getEnseignantsByDepartementId(Long departementId);
     List<Option> getOptionsByDepartementId(Long departementId);
     Enseignant addEnseignantToDepartement(Long departementId, Enseignant enseignant);
+    Enseignant removeEnseignantFromDepartement(Long enseignantId, Long departementId);
     public Map<String, Integer> getNombreEnseignantsParDepartement();
 }

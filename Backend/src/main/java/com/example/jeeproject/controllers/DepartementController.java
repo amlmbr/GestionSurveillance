@@ -57,6 +57,20 @@ public class DepartementController {
         return ResponseEntity.ok(departementService.updateDepartement(id, departement));
     }
 
+    @PatchMapping("/{departementId}/enseignants/{enseignantId}/remove")
+    public ResponseEntity<Enseignant> removeEnseignantFromDepartement(
+            @PathVariable Long departementId,
+            @PathVariable Long enseignantId
+    ) {
+        System.out.println("------------->departementId : "+departementId);
+        System.out.println("------------->enseignantId : "+enseignantId);
+
+        Enseignant enseignant = departementService.removeEnseignantFromDepartement(enseignantId, departementId);
+        return ResponseEntity.ok(enseignant);
+    }
+
+
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDepartement(@PathVariable Long id) {
         departementService.deleteDepartement(id);

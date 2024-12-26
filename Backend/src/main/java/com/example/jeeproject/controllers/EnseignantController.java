@@ -51,6 +51,18 @@ public class EnseignantController {
         enseignantService.deleteEnseignant(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{enseignantId}/departement/{departementId}")
+    public ResponseEntity<Void> removeEnseignantFromDepartement(
+            @PathVariable Long enseignantId,
+            @PathVariable Long departementId) {
+        enseignantService.removeEnseignantFromDepartement(enseignantId, departementId);
+        return ResponseEntity.noContent().build();
+    }
+
+
+
+
     @GetMapping("/percentages")
     public Map<String, Double> getEnseignantPercentages() {
         return enseignantService.getPercentageDispenses();

@@ -115,7 +115,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://192.168.11.103:3000")); // Frontend React
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Méthodes autorisées
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH" , "OPTIONS")); // Méthodes autorisées
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With")); // En-têtes autorisés
         configuration.setAllowCredentials(true); // Si vous avez besoin de gérer les cookies
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

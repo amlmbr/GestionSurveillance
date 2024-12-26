@@ -15,7 +15,8 @@ import {
 import {
   updateEnseignant,
   deleteEnseignant,
-} from "../services/enseignantService";
+  removeEnseignantFromDepartement,
+} from '../services/enseignantService';
 import { getEnseignants } from "../services/enseignantsService";
 import "./EnseignantList.css";
 
@@ -194,21 +195,36 @@ const DepartementEnseignantList = () => {
       .catch((error) => console.error("Error deleting enseignant:", error));
   };
 
+  const handleRemoveFromDepartement = (enseignantId) => {
+    removeEnseignantFromDepartement(enseignantId, departementId)
+      .then(() => {
+        loadEnseignants(); // Recharge les enseignants du département
+        loadAllEnseignants(); // Recharge les enseignants disponibles
+      })
+      .catch((error) => {
+        console.error(
+          `Erreur lors de la suppression de l'enseignant ${enseignantId} du département:`,
+          error
+        );
+      });
+  };
+
+
   const booleanBodyTemplate = (rowData, field) => {
     return rowData[field] ? "Oui" : "Non";
   };
 
   const actionBodyTemplate = (rowData) => {
     return (
-      <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
         <Button
           icon="pi pi-pencil"
           rounded
           outlined
           className="p-button-warning"
-          onClick={() => handleOpenModal("edit", rowData)}
+          onClick={() => handleOpenModal('edit', rowData)}
           tooltip="Modifier"
-          tooltipOptions={{ position: "top" }}
+          tooltipOptions={{ position: 'top' }}
         />
         <Button
           icon="pi pi-trash"
@@ -217,7 +233,15 @@ const DepartementEnseignantList = () => {
           severity="danger"
           onClick={() => handleDelete(rowData.id)}
           tooltip="Supprimer"
-          tooltipOptions={{ position: "top" }}
+          tooltipOptions={{ position: 'top' }}
+        />
+        <Button
+          icon="pi pi-times"
+          rounded
+          outlined
+          severity="secondary"
+          label="Retirer"
+          onClick={() => handleRemoveFromDepartement(rowData.id)}
         />
       </div>
     );

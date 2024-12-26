@@ -13,6 +13,18 @@ export const getEnseignants = async () => {
   }
 };
 
+export const removeFromDepartment = async (enseignantId) => {
+  try {
+    const response = await axiosInstance.patch(
+      `${API_URL}/${enseignantId}/removeDepartment`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la suppression du département:', error);
+    throw error;
+  }
+};
+
 // Fonction pour ajouter un enseignant
 export const addEnseignant = async (enseignant) => {
   try {

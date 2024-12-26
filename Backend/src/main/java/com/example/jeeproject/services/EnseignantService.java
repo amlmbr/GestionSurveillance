@@ -11,5 +11,6 @@ public interface EnseignantService {
     Enseignant createEnseignant(Enseignant enseignant);
     Enseignant updateEnseignant(Long id, Enseignant enseignant);
     void deleteEnseignant(Long id);
+    void removeEnseignantFromDepartement(Long enseignantId, Long departementId);
     public Map<String, Double> getPercentageDispenses();
 }

@@ -83,6 +83,24 @@ public class DepartementServiceImpl implements DepartementService {
         departementRepository.save(departement);
         return savedEnseignant;
     }
+
+    @Override
+    public Enseignant removeEnseignantFromDepartement(Long enseignantId, Long departementId) {
+        Departement departement = getDepartementById(departementId);
+        Enseignant enseignant = enseignantRepository.findById(enseignantId)
+                .orElseThrow(() -> new RuntimeException("Enseignant non trouvé: " + enseignantId));
+
+        if (enseignant.getDepartement() != null &&
+                enseignant.getDepartement().getId().equals(departementId)) {
+            enseignant.setDepartement(null);
+            departement.getEnseignants().remove(enseignant);
+            departementRepository.save(departement);
+            return enseignantRepository.save(enseignant);
+        }
+
+        throw new RuntimeException("L'enseignant n'appartient pas à ce département");
+    }
+
     @Override
     public Map<String, Integer> getNombreEnseignantsParDepartement() {
         List<Departement> departements = departementRepository.findAll();

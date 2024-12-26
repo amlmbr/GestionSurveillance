@@ -58,6 +58,20 @@ public class EnseignantServiceImpl implements EnseignantService {
 
         return enseignantRepository.save(existingEnseignant);
     }
+    @Override
+    public void removeEnseignantFromDepartement(Long enseignantId, Long departementId) {
+        Enseignant enseignant = getEnseignantById(enseignantId);
+
+        if (enseignant.getDepartement() != null && enseignant.getDepartement().getId().equals(departementId)) {
+            enseignant.setDepartement(null);
+            enseignantRepository.save(enseignant);
+        } else {
+            throw new RuntimeException("L'enseignant n'est pas associé à ce département.");
+        }
+    }
+
+
+
 
     @Override
     public void deleteEnseignant(Long id) {
