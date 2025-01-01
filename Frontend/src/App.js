@@ -10,11 +10,12 @@ import LoginComp from "../src/loginui/loginComponet";
 import BonjourPage from "../src/homeui/BonjourPage";
 import EnseignantList from "../src/components/EnseignantList";
 import LocalList from "../src/components/LocalList";
-import ModuleList from '../src/components/ModuleList';
-import OptionList from '../src/components/OptionList';
+import ModuleList from "../src/components/ModuleList";
+import OptionList from "../src/components/OptionList";
 import DepartementList from "./components/DepartementList";
 import DepartementEnseignantList from "./components/DepartementEnseignantList";
 import SessionDetails from "../src/pages/SessionDetails";
+import StudentSchedule from "./components/StudentSchedule";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyCodePage from "./pages/VerifyCodePage";
 import ExamTable from "./pages/ExamTable";
@@ -25,7 +26,7 @@ import "primeicons/primeicons.css";
 import SurveillanceComponent from "./components/SurveillanceComponent";
 import { useSession } from "./contexte/SessionContext";
 import { SessionProvider } from "./contexte/SessionContext";
-import ChatBot from './components/ChatBot';
+import ChatBot from "./components/ChatBot";
 
 function LayoutWithSidebar({ children }) {
   const location = useLocation();
@@ -51,54 +52,59 @@ function LayoutWithSidebar({ children }) {
 
   const navigationItems = [
     {
-      path: sessionId ? `/session/${sessionId}` : '/bonjour',
-      label: 'Tableau de bord',
-      icon: 'pi pi-home',
+      path: sessionId ? `/session/${sessionId}` : "/bonjour",
+      label: "Tableau de bord",
+      icon: "pi pi-home",
     },
     {
-      path: '/local',
-      label: 'Gestion des Locaux',
-      icon: 'pi pi-building',
+      path: "/local",
+      label: "Gestion des Locaux",
+      icon: "pi pi-building",
     },
     {
-      path: '/departements',
-      label: 'Gestion des Départements',
-      icon: 'pi pi-sitemap',
+      path: "/departements",
+      label: "Gestion des Départements",
+      icon: "pi pi-sitemap",
     },
     {
-      path: '/enseignant',
-      label: 'Gestion des Enseignants',
-      icon: 'pi pi-users',
+      path: "/enseignant",
+      label: "Gestion des Enseignants",
+      icon: "pi pi-users",
     },
     {
-      path: '/chatbot',
-      label: 'Assistant Virtual',
-      icon: 'pi pi-comments',
+      path: "/chatbot",
+      label: "Assistant Virtual",
+      icon: "pi pi-comments",
     },
     {
-      path: '/module',
-      label: 'Modules',
-      icon: 'pi pi-book',
+      path: "/module",
+      label: "Modules",
+      icon: "pi pi-book",
     },
     {
-      path: '/option',
-      label: 'Options',
-      icon: 'pi pi-book',
+      path: "/option",
+      label: "Options",
+      icon: "pi pi-book",
     },
     {
-      path: '/exam',
-      label: 'Examens',
-      icon: 'pi pi-copy',
+      path: "/exam",
+      label: "Examens",
+      icon: "pi pi-copy",
     },
     {
-      path: '/surveillance',
-      label: 'Surveillance des Examens',
-      icon: 'pi pi-eye',
+      path: "/surveillance",
+      label: "Surveillance des Examens",
+      icon: "pi pi-eye",
     },
     {
-      path: '/bonjour',
-      label: 'Sessions',
-      icon: 'pi pi-calendar',
+      path: "/student-schedule",
+      label: "Emploi des Étudiants",
+      icon: "pi pi-calendar-times",
+    },
+    {
+      path: "/bonjour",
+      label: "Sessions",
+      icon: "pi pi-calendar",
     },
   ];
 
@@ -345,6 +351,10 @@ function AppContent() {
             <Route
               path="/surveillance"
               element={<SurveillanceComponent sessionId={sessionId} />}
+            />
+            <Route
+              path="/student-schedule"
+              element={<StudentSchedule sessionId={sessionId} />}
             />
           </Routes>
         </LayoutWithSidebar>
