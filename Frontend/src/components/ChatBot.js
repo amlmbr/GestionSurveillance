@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './ChatBot.css'; // Import du fichier CSS
-
+import Message from "./Message"
+import {getMessageFromChat} from "../services/chatbootService"
 
 const ChatBot = () => {
   const [messages, setMessages] = useState([
@@ -21,30 +22,56 @@ const ChatBot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (newMessage.trim()) {
-      const userMessage = {
-        type: 'user',
-        content: newMessage,
-        timestamp: new Date(),
-      };
+        const userMessage = {
+            type: 'user',
+            content: newMessage,
+            timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, userMessage]);
+        setNewMessage('');
 
-      setMessages((prev) => [...prev, userMessage]);
-      setNewMessage('');
+        const typingMessage = {
+            type: 'bot',
+            content: 'En train d\'écrire...',
+            timestamp: new Date(),
+            isTyping: true
+        };
+        setMessages((prev) => [...prev, typingMessage]);
 
-      // // Simulate bot response
-      // setTimeout(() => {
-      //   const botMessage = {
-      //     type: 'bot',
-      //     content:
-      //       'Je traite votre demande... Je reviendrai vers vous très rapidement.',
-      //     timestamp: new Date(),
-      //   };
-      //   setMessages((prev) => [...prev, botMessage]);
-      // }, 1000);
+        try {
+            const response = await getMessageFromChat(newMessage);
+            
+            // Assurez-vous que le contenu est une chaîne de caractères
+            const formattedContent = String(response.response);
+
+            setMessages((prev) => prev.map((msg, index) => {
+                if (index === prev.length - 1 && msg.isTyping) {
+                    return {
+                        type: 'bot',
+                        content: formattedContent,
+                        timestamp: new Date(),
+                        isTyping: false
+                    };
+                }
+                return msg;
+            }));
+        } catch (error) {
+            setMessages((prev) => prev.map((msg, index) => {
+                if (index === prev.length - 1 && msg.isTyping) {
+                    return {
+                        type: 'bot',
+                        content: 'Désolé, une erreur est survenue. Veuillez réessayer.',
+                        timestamp: new Date(),
+                        isTyping: false
+                    };
+                }
+                return msg;
+            }));
+        }
     }
-  };
+};
 
   const formatTime = (date) => {
     return new Date(date).toLocaleTimeString('fr-FR', {
@@ -67,19 +94,14 @@ const ChatBot = () => {
         {/* Messages Container */}
         <div className="messages-container">
           {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`message-wrapper ${
-                msg.type === 'user' ? 'user-message' : 'bot-message'
-              }`}
-            >
-              <div className="message-bubble">
-                <p>{msg.content}</p>
-                <span className="timestamp">{formatTime(msg.timestamp)}</span>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+             <Message
+             key={index}
+             content={msg.content}
+             type={msg.type}
+             timestamp={msg.timestamp}
+           />
+         ))}
+         <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
