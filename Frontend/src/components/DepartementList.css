@@ -1,0 +1,69 @@
+.text-xl {
+  font-weight: bold !important;
+}
+
+.p-inputgroup {
+  margin-top: 0.6rem !important;
+}
+
+.p-inputtext, .p-inputnumber-input {
+  font-weight: bold !important;
+}
+
+.grid > .col-12 {
+  margin-bottom: 2.5rem !important;
+}
+
+.grid > .col-12:last-child {
+  margin-bottom: 0 !important;
+}
+
+.p-button.p-button-success {
+  margin-right: 0.5rem !important;
+}
+/* Conteneur de la table avec padding */
+.departement-table-container {
+  padding: 20px; /* Ajout du padding autour de la table */
+}
+/* Applique les coins arrondis et l'ombre autour de la table */
+.departement-table-container .p-datatable {
+  border-radius: 10px;
+  overflow: hidden; /* Pour les coins arrondis */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+/* Styles pour les en-têtes de table */
+.p-datatable-thead > tr > th {
+  background-color: #f5f5f5; /* Couleur de fond de l'en-tête */
+  color: #333; /* Couleur du texte */
+  padding: 10px 20px;
+  text-align: center; /* Centrer le texte dans les en-têtes */
+  border-bottom: 2px solid #ddd; /* Bordure en bas de l'en-tête */
+}
+/* Styles pour les cellules du corps de la table */
+.p-datatable-tbody > tr > td {
+  padding: 12px 20px;
+  text-align: center; /* Centrer le texte dans les cellules */
+  border-bottom: 1px solid #ddd; /* Bordure en bas des cellules */
+}
+/* Lignes en alternance avec un fond plus clair */
+.p-datatable-striped > .p-datatable-tbody > tr:nth-child(odd) {
+  background-color: #fafafa;
+}
+/* Style pour le bouton "Annuler" et autres boutons textuels */
+.p-button-text {
+  color: #2196f3; /* Bleu pour les boutons */
+  text-decoration: underline;
+}
+/* Optionnel : Style pour l'en-tête de la table */
+.departement-table-container h2 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #000000; /* Couleur du titre de la page */
+}
+/* Style pour les champs de formulaire dans le modal */
+.p-inputgroup-addon {
+  background-color: #f1f1f1; /* Couleur de fond des icônes */
+}
+.p-inputtext-lg {
+  font-size: 1rem; /* Taille de police plus grande pour les champs de texte */
+}
