@@ -1,10 +1,20 @@
-# GestionSurveillance
-# ExamWatch - Système de Gestion de Surveillance des Examens
+# ExamMaster
+# ExamMaster - Gestion Intelligente et Complète des Examens
 
-![Gestion De Surveillance](https://github.com/user-attachments/assets/2cdd8aaa-af3d-4ce9-bdc9-0f665b895306)
+
+![Web App](https://github.com/user-attachments/assets/88442a14-6aab-4dd3-a380-fe9e4a7cf75c)
+
 
 ## Description
-ExamWatch est une application web complète conçue pour gérer efficacement la surveillance des examens dans les établissements d'enseignement. Elle offre une interface intuitive pour l'administration des examens, la gestion des surveillants, et le suivi des sessions d'examens en temps réel.
+ExamMaster est une application web complète, spécialement conçue pour gérer efficacement la surveillance et l’organisation des examens dans les établissements d’enseignement. Grâce à son interface intuitive et ses fonctionnalités avancées, elle simplifie les processus complexes liés à l’administration des examens, la gestion des surveillants, et le suivi des sessions.
+
+L’application permet aux administrateurs de planifier les examens en tenant compte des contraintes logistiques, telles que la disponibilité des locaux, des surveillants, et des créneaux horaires. Elle facilite également l’attribution des enseignants aux différents rôles et fournit des outils pour gérer les départements, les modules et les options des étudiants.
+
+L’une des forces majeures de ExamMaster est son assistant virtuel intégré. Cet outil interactif aide les utilisateurs à accéder rapidement aux informations nécessaires, comme les horaires des sessions, la liste des surveillants assignés ou la disponibilité des salles, offrant ainsi une expérience utilisateur fluide et conviviale.
+
+En outre, ExamMaster inclut un tableau de bord en temps réel permettant de suivre l’état des sessions d’examens : présence des surveillants, occupation des locaux, et toute modification. 
+
+Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et plus transparente, garantissant ainsi un déroulement optimal des sessions dans un cadre organisé et serein.
 
 ## Table des matières
 - [Objectifs](#objectifs)
