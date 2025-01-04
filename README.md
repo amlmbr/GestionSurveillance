@@ -175,7 +175,7 @@ Les variables suivantes doivent être configurées dans `application.properties`
     </td>
     <td align="center">
        <p>Fihri Yasmine</p>
-      <a href="https://github.com/bouleknadel">
+      <a href="https://github.com/yasminefhr1">
        <img src="https://github.com/yasminefhr1.png" width="100px;" alt="yasminefhr1"/><br />
         <sub><b>yasminefhr1</b></sub>
       </a>
@@ -189,7 +189,7 @@ Les variables suivantes doivent être configurées dans `application.properties`
     </td>
     <td align="center">
        <p>Abderrahmane Bouleknadel </p>
-      <a href="https://github.com/yasminefhr1">
+      <a href="https://github.com/bouleknadel">
         <img src="https://github.com/bouleknadel.png" width="100px;" alt="Abderrahmane Bouleknadel"/><br />
         <sub><b>Abderrahmane Bouleknadel</b></sub>
       </a>
