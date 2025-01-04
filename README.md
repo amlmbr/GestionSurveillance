@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # GestionSurveillance
  Front Back end
 =======
@@ -200,4 +199,4 @@ Les variables suivantes doivent être configurées dans `application.properties`
     </td>
   </tr>
 </table>
->>>>>>> 997ea82082d4edfed7cf41a30aa5cc3d2d1a1479
+
