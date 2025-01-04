@@ -85,7 +85,7 @@ Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et p
 
 ## Technologies Utilisées
 ### Backend
-- Java 17
+- Java 21
 - Spring Boot 3.4.0
 - Spring Security
 - Spring AI
