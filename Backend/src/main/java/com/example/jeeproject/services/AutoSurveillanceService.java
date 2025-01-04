@@ -12,27 +12,42 @@ import java.util.*;
 @Service
 public class AutoSurveillanceService {
 
+    // Injection des dépendances pour les repositories utilisés
     @Autowired private ExamenRepository examenRepository;
     @Autowired private EnseignantRepository enseignantRepository;
     @Autowired private SurveillanceAssignationRepository surveillanceAssignationRepository;
     @Autowired private SessionRepository sessionRepository;
 
+    /**
+     * Assigner automatiquement des surveillances à une session donnée.
+     * @param sessionId L'identifiant de la session.
+     * @return Une liste d'assignations de surveillance.
+     */
     @Transactional
     public List<SurveillanceAssignation> assignerSurveillanceAutomatique(Long sessionId) {
+        // Récupération de la session à partir de l'ID
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+
+        // Inversion de l'état de confirmation de la session
         session.setConfirmed(!session.isConfirmed());
         sessionRepository.save(session);
+
+        // Si la session est confirmée, procéder à l'assignation automatique
         if(session.isConfirmed()) {
             List<SurveillanceAssignation> assignments = new ArrayList<>();
+
+            // Récupération des examens et des enseignants disponibles
             List<Examen> examens = examenRepository.findExamsBySessionId(sessionId);
             List<Enseignant> enseignantsDisponibles = enseignantRepository.findEnseignantByEstDispenseFalse();
 
+            // Tri des examens par date, puis par horaire
             examens.sort(Comparator.comparing(Examen::getDate).thenComparing(Examen::getHoraire));
 
+            // Parcourir chaque examen
             for (Examen examen : examens) {
                 for (Local local : examen.getLocaux()) {
-                    // First, assign the module leader if available
+                    // Assigner en priorité le responsable de module, s'il est disponible
                     Optional<Enseignant> moduleLeader = enseignantsDisponibles.stream()
                             .filter(e -> e.getModulesResponsables().stream()
                                     .anyMatch(module -> module.getId().equals(examen.getModuleExamen().getId())))
@@ -40,19 +55,19 @@ public class AutoSurveillanceService {
 
                     int remainingSurveillants = local.getNbSurveillants();
 
+                    // Vérification et assignation du responsable de module
                     if (moduleLeader.isPresent() && !enseignantDejaAssignePourPeriode(moduleLeader.get().getId(), examen.getDate(), examen.getHoraire())) {
                         SurveillanceAssignation ttAssignation = creerAssignation(
                                 examen,
                                 moduleLeader.get(),
                                 local,
-                                "TT",
+                                "TT", // Type de surveillant (responsable total)
                                 session
                         );
                         assignments.add(surveillanceAssignationRepository.save(ttAssignation));
-                        // Don't increment surveillance count for TT
                     }
 
-                    // Find remaining surveillants excluding the module leader
+                    // Trouver les surveillants restants pour le local
                     List<Enseignant> surveillantsForLocal = trouverSurveillantsDisponibles(
                             enseignantsDisponibles,
                             examen.getDate(),
@@ -62,12 +77,13 @@ public class AutoSurveillanceService {
                             moduleLeader.orElse(null)
                     );
 
+                    // Assigner les surveillants restants
                     for (Enseignant surveillant : surveillantsForLocal) {
                         SurveillanceAssignation assignation = creerAssignation(
                                 examen,
                                 surveillant,
                                 local,
-                                "PRINCIPAL",
+                                "PRINCIPAL", // Type de surveillant (principal)
                                 session
                         );
                         assignments.add(surveillanceAssignationRepository.save(assignation));
@@ -78,9 +94,18 @@ public class AutoSurveillanceService {
             return assignments;
         }
         return null;
-
     }
 
+    /**
+     * Trouver les enseignants disponibles pour surveiller un examen.
+     * @param enseignants La liste des enseignants disponibles.
+     * @param date La date de l'examen.
+     * @param horaire L'horaire de l'examen.
+     * @param departementId L'identifiant du département.
+     * @param nbRequired Le nombre de surveillants requis.
+     * @param moduleLeader Le responsable de module, à exclure si déjà assigné.
+     * @return Une liste d'enseignants disponibles.
+     */
     private List<Enseignant> trouverSurveillantsDisponibles(
             List<Enseignant> enseignants,
             LocalDate date,
@@ -90,15 +115,17 @@ public class AutoSurveillanceService {
             Enseignant moduleLeader) {
 
         return enseignants.stream()
-                .filter(e -> e.getDepartement().getId().equals(departementId))
-                .filter(e -> !enseignantDejaAssignePourPeriode(e.getId(), date, horaire))
-                .filter(e -> moduleLeader == null || !e.getId().equals(moduleLeader.getId()))
-                .sorted(Comparator.comparing(Enseignant::getNbSurveillances))
-                .limit(nbRequired)
+                .filter(e -> e.getDepartement().getId().equals(departementId)) // Filtrer par département
+                .filter(e -> !enseignantDejaAssignePourPeriode(e.getId(), date, horaire)) // Filtrer ceux non assignés
+                .filter(e -> moduleLeader == null || !e.getId().equals(moduleLeader.getId())) // Exclure le responsable de module
+                .sorted(Comparator.comparing(Enseignant::getNbSurveillances)) // Trier par le nombre de surveillances
+                .limit(nbRequired) // Limiter au nombre requis
                 .toList();
     }
 
-    // Other methods remain unchanged
+    /**
+     * Créer une assignation de surveillance.
+     */
     private SurveillanceAssignation creerAssignation(
             Examen examen,
             Enseignant enseignant,
@@ -119,12 +146,18 @@ public class AutoSurveillanceService {
         return assignation;
     }
 
+    /**
+     * Vérifie si un enseignant est déjà assigné pour une période donnée.
+     */
     private boolean enseignantDejaAssignePourPeriode(Long enseignantId, LocalDate date, String horaire) {
         return surveillanceAssignationRepository.findByEnseignantAndDate(enseignantId, date)
                 .stream()
                 .anyMatch(sa -> sa.getExamen().getHoraire().equals(horaire));
     }
 
+    /**
+     * Incrémente le nombre de surveillances d'un enseignant.
+     */
     private void incrementerNbSurveillances(Enseignant enseignant) {
         enseignant.setNbSurveillances(enseignant.getNbSurveillances() + 1);
         enseignantRepository.save(enseignant);

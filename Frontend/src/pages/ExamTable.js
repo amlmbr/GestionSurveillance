@@ -197,14 +197,23 @@ const ExamTable = ({ sessionId }) => {
     let currentDate = new Date(dateDebut);
 
     while (currentDate <= new Date(dateFin)) {
-      dates.push(new Date(currentDate).toISOString().split("T")[0]);
+      // Inclure tous les jours, y compris les dimanches
+      dates.push({
+        date: new Date(currentDate).toISOString().split("T")[0],
+        isSunday: currentDate.getDay() === 0
+      });
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    return dates.map((date) => ({ date }));
+    return dates;
   }, [session]);
 
   const handleCellClick = async (date, horaire) => {
+    const clickedDate = new Date(date);
+    if (clickedDate.getDay() === 0) {
+      // Si c'est un dimanche, ne rien faire
+      return;
+    }
     setLoadingCell({ date, horaire });
     try {
       const exams = await loadCellExams(date, horaire);
@@ -316,20 +325,31 @@ const ExamTable = ({ sessionId }) => {
       state.loadingCell?.date === rowData.date &&
       state.loadingCell?.horaire === horaire;
     const examCount = cellExams[`${rowData.date}-${horaire}`] || 0;
-
+    if (rowData.isSunday) {
+      return (
+        <div
+          className="flex align-items-center justify-content-center"
+          style={{
+            minHeight: "3rem",
+            backgroundColor: "#f0f0f0",
+            cursor: "not-allowed",
+            border: "1px solid #e0e0e0",
+            borderRadius: "4px"
+          }}
+        >
+          <div className="flex flex-column align-items-center">
+            <i className="pi pi-ban text-500 mb-2" style={{ fontSize: '1.2rem' }}></i>
+            <span className="text-500" style={{ fontSize: '0.9rem' }}>Jour Bloqué (Dimanche)</span>
+          </div>
+        </div>
+      );
+    }
     return (
-      
       <div
         className="cursor-pointer flex align-items-center justify-content-center gap-2"
         style={{
           minHeight: "3rem",
-          // backgroundColor: isLoading
-          //   ? 'var(--surface-200)'
-          //   : examCount > 0
-          //   ? 'var(--surface-card)'
-          //   : 'var(--surface-card)',
           transition: "all 0.2s",
-          // border: examCount > 0 ? '1px solid var(--primary-200)' : 'none',
           borderRadius: "4px",
         }}
         onClick={() => handleCellClick(rowData.date, horaire)}

@@ -2,10 +2,7 @@ package com.example.jeeproject.ai;
 
 import com.example.jeeproject.entity.*;
 import com.example.jeeproject.entity.Module;
-import com.example.jeeproject.repo.ExamenRepository;
-import com.example.jeeproject.repo.ModuleRepository;
-import com.example.jeeproject.repo.OptionRepository;
-import com.example.jeeproject.repo.SurveillanceAssignationRepository;
+import com.example.jeeproject.repo.*;
 import com.example.jeeproject.services.*;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +26,9 @@ public class ChatController {
     @Autowired private ModuleRepository moduleService;
     @Autowired private OptionRepository optionService;
     @Autowired private SurveillanceAssignationRepository surveillanceService;
+    @Autowired private LocalRepository localRepository;
+    @Autowired private StudentRepository studentRepository;
+    @Autowired private SessionRepository sessionRepository;
 
     public ChatController(ChatClient.Builder builder) {
         this.chatClient = builder.build();
@@ -42,16 +42,18 @@ public class ChatController {
         List<Examen> examens = examenService.findAll();
         List<Module> modules = moduleService.findAll();
         List<Option> options = optionService.findAll();
+        List<Local> locals = localRepository.findAll();
         List<SurveillanceAssignation> surveillances = surveillanceService.findAll();
-
+        List<Student> students = studentRepository.findAll();
+        List<Session> sessions = sessionRepository.findAll();
         // Créer le contexte complet
         String contextData = createCompleteContext(
                 departements, enseignants, examens,
-                modules, options, surveillances
+                modules, options, surveillances,locals,students,sessions
         );
 
         String systemMessage = String.format("""
-            Vous êtes un assistant administratif spécialisé dans la gestion d'un établissement éducatif.
+            Vous êtes un assistant administratif spécialisé dans la gestion d'un établissement éducatif ensa el jadida voic sa localisation: 7H28+C96, El Jadida.
             
             Format de réponse à utiliser :
             1. Pour les informations sur les surveillances d'examens :
@@ -91,6 +93,7 @@ public class ChatController {
             - Mettez en évidence les informations importantes
             - Numérotez les suggestions et recommandations
             - Utilisez des séparateurs pour distinguer les sections
+            - ne répondrai uniquement qu'aux questions qui  sont  liées au contexte académique
             
             Données actuelles de l'établissement:
             %s
@@ -113,10 +116,23 @@ public class ChatController {
             List<Examen> examens,
             List<Module> modules,
             List<Option> options,
-            List<SurveillanceAssignation> surveillances) {
+            List<SurveillanceAssignation> surveillances,
+            List<Local> locals,
+            List<Student> students,
+            List<Session> sessions
+            ) {
 
         StringBuilder context = new StringBuilder();
-
+        context.append("=== Session ===\n");
+        for (Session session : sessions) {
+            context.append(String.format("- (ID: %d) date debut : %s date fin : %s type : %s confirmation :%s\n",
+                    session.getId(),
+                    session.getDateDebut(),
+                    session.getDateFin(),
+                    session.getTypeSession(),
+                    session.isConfirmed()
+                    ));
+        }
         // Informations sur les départements
         context.append("=== DÉPARTEMENTS ===\n");
         for (Departement dept : departements) {
@@ -124,7 +140,24 @@ public class ChatController {
                     dept.getNom(),
                     dept.getId()));
         }
+        context.append("=== Students ===\n");
+        for (Student student : students) {
+            context.append(String.format("- %s (ID: %d) option: %s\n ",
+                    student.getNom(),
+                    student.getId(),
+                    student.getOption().getNom()
 
+            ));
+        }
+        context.append("=== Locaux ===\n");
+        for (Local local : locals) {
+            context.append(String.format("- %s (ID: %d) disponibilite :%s , type :%s\n  ",
+                    local.getNom(),
+                    local.getId(),
+                    local.isEstDisponible(),
+                    local.getType()
+            ));
+        }
         // Informations sur les options
         context.append("\n=== OPTIONS ===\n");
         for (Option opt : options) {
@@ -153,18 +186,22 @@ public class ChatController {
         // Informations sur les examens
         context.append("\n=== EXAMENS ===\n");
         for (Examen exam : examens) {
-            context.append(String.format("- Module: %s, Date: %s\n",
+            context.append(String.format("- Module: %s, Date: %s idsession : %s\n",
                     exam.getModuleExamen() != null ? exam.getModuleExamen().getNom() : "Non assigné",
-                    exam.getDate()));
+                    exam.getDate(),
+                    exam.getSession().getId()
+            ));
         }
 
         // Informations sur les surveillances
         context.append("\n=== SURVEILLANCES ===\n");
         for (SurveillanceAssignation surv : surveillances) {
-            context.append(String.format("- Examen: %s, Enseignant: %s %s\n",
+            context.append(String.format("- Examen: %s, Enseignant: %s %s SessionId: %s\n",
                     surv.getExamen() != null ? surv.getExamen().getModuleExamen().getNom() : "Non assigné",
                     surv.getEnseignant() != null ? surv.getEnseignant().getPrenom() : "",
-                    surv.getEnseignant() != null ? surv.getEnseignant().getNom() : "Non assigné"));
+                    surv.getEnseignant() != null ? surv.getEnseignant().getNom() : "Non assigné",
+                    surv.getEnseignant().getId()
+                    ));
         }
 
         // Statistiques générales
