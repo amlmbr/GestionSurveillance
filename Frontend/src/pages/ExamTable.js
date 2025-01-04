@@ -197,6 +197,7 @@ const ExamTable = ({ sessionId }) => {
     let currentDate = new Date(dateDebut);
 
     while (currentDate <= new Date(dateFin)) {
+<<<<<<< HEAD
       // Inclure tous les jours, y compris les dimanches
       dates.push({
         date: new Date(currentDate).toISOString().split("T")[0],
@@ -214,6 +215,16 @@ const ExamTable = ({ sessionId }) => {
       // Si c'est un dimanche, ne rien faire
       return;
     }
+=======
+      dates.push(new Date(currentDate).toISOString().split("T")[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return dates.map((date) => ({ date }));
+  }, [session]);
+
+  const handleCellClick = async (date, horaire) => {
+>>>>>>> 997ea82082d4edfed7cf41a30aa5cc3d2d1a1479
     setLoadingCell({ date, horaire });
     try {
       const exams = await loadCellExams(date, horaire);
@@ -325,6 +336,7 @@ const ExamTable = ({ sessionId }) => {
       state.loadingCell?.date === rowData.date &&
       state.loadingCell?.horaire === horaire;
     const examCount = cellExams[`${rowData.date}-${horaire}`] || 0;
+<<<<<<< HEAD
     if (rowData.isSunday) {
       return (
         <div
@@ -345,11 +357,26 @@ const ExamTable = ({ sessionId }) => {
       );
     }
     return (
+=======
+
+    return (
+      
+>>>>>>> 997ea82082d4edfed7cf41a30aa5cc3d2d1a1479
       <div
         className="cursor-pointer flex align-items-center justify-content-center gap-2"
         style={{
           minHeight: "3rem",
+<<<<<<< HEAD
           transition: "all 0.2s",
+=======
+          // backgroundColor: isLoading
+          //   ? 'var(--surface-200)'
+          //   : examCount > 0
+          //   ? 'var(--surface-card)'
+          //   : 'var(--surface-card)',
+          transition: "all 0.2s",
+          // border: examCount > 0 ? '1px solid var(--primary-200)' : 'none',
+>>>>>>> 997ea82082d4edfed7cf41a30aa5cc3d2d1a1479
           borderRadius: "4px",
         }}
         onClick={() => handleCellClick(rowData.date, horaire)}

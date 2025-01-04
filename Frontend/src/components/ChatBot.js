@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './ChatBot.css'; // Import du fichier CSS
+<<<<<<< HEAD
 import Message from "./Message"
 import {getMessageFromChat} from "../services/chatbootService"
+=======
+
+>>>>>>> 997ea82082d4edfed7cf41a30aa5cc3d2d1a1479
 
 const ChatBot = () => {
   const [messages, setMessages] = useState([
@@ -22,6 +26,7 @@ const ChatBot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+<<<<<<< HEAD
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
         const userMessage = {
@@ -72,6 +77,32 @@ const ChatBot = () => {
         }
     }
 };
+=======
+
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      const userMessage = {
+        type: 'user',
+        content: newMessage,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      setNewMessage('');
+
+      // // Simulate bot response
+      // setTimeout(() => {
+      //   const botMessage = {
+      //     type: 'bot',
+      //     content:
+      //       'Je traite votre demande... Je reviendrai vers vous très rapidement.',
+      //     timestamp: new Date(),
+      //   };
+      //   setMessages((prev) => [...prev, botMessage]);
+      // }, 1000);
+    }
+  };
+>>>>>>> 997ea82082d4edfed7cf41a30aa5cc3d2d1a1479
 
   const formatTime = (date) => {
     return new Date(date).toLocaleTimeString('fr-FR', {
@@ -94,6 +125,7 @@ const ChatBot = () => {
         {/* Messages Container */}
         <div className="messages-container">
           {messages.map((msg, index) => (
+<<<<<<< HEAD
              <Message
              key={index}
              content={msg.content}
@@ -102,6 +134,21 @@ const ChatBot = () => {
            />
          ))}
          <div ref={messagesEndRef} />
+=======
+            <div
+              key={index}
+              className={`message-wrapper ${
+                msg.type === 'user' ? 'user-message' : 'bot-message'
+              }`}
+            >
+              <div className="message-bubble">
+                <p>{msg.content}</p>
+                <span className="timestamp">{formatTime(msg.timestamp)}</span>
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+>>>>>>> 997ea82082d4edfed7cf41a30aa5cc3d2d1a1479
         </div>
 
         {/* Input Area */}
