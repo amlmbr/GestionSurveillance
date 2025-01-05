@@ -21,7 +21,9 @@ import * as XLSX from 'xlsx';
 import { confirmDialog } from 'primereact/confirmdialog';
 import { ConfirmDialog } from 'primereact/confirmdialog';
 import EditAssignmentDialog from './EditAssignmentDialog';
-
+import { JourFerieService } from '../services/JourFerieService';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const SurveillanceComponent = ({ sessionId }) => {
     const [departements, setDepartements] = useState([]);
@@ -32,6 +34,7 @@ const SurveillanceComponent = ({ sessionId }) => {
     const [session, setSession] = useState(null);
     const [horaires, setHoraires] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [joursFeries, setJoursFeries] = useState([]);
     const toast = useRef(null);
     const [state, setState] = useState({
         loadingCell: null,
@@ -44,7 +47,6 @@ const SurveillanceComponent = ({ sessionId }) => {
     const [assignmentDialogVisible, setAssignmentDialogVisible] = useState(false);
     const [selectedExam, setSelectedExam] = useState(null);
     const [surveillanceAssignments, setSurveillanceAssignments] = useState({});
-    
 
     // Nouvelles fonctions de mise à jour d'état
     const setLoadingCell = (cell) => setState(prev => ({ ...prev, loadingCell: cell }));
@@ -54,8 +56,7 @@ const SurveillanceComponent = ({ sessionId }) => {
     useEffect(() => {
         loadDepartements();
         loadSessionData();
-        
-        
+        loadJoursFeries();
     }, []);
 
     useEffect(() => {
@@ -70,7 +71,6 @@ const SurveillanceComponent = ({ sessionId }) => {
             showError('Erreur lors du chargement des départements');
         }
     };
-    
 
     const loadEnseignants = async () => {
         setLoading(true);
@@ -89,16 +89,17 @@ const SurveillanceComponent = ({ sessionId }) => {
           // Extraire l'heure de début
           const startHourA = parseInt(a.split('-')[0].split(':')[0]);
           const startHourB = parseInt(b.split('-')[0].split(':')[0]);
-          
+
           // Comparer les heures
           return startHourA - startHourB;
         });
       };
-      const loadSessionData = async () => {
+
+    const loadSessionData = async () => {
         try {
           const sessionData = await SessionService.getSessionById(sessionId);
           setSession(sessionData);
-       
+
           // Créer et trier le tableau d'horaires
           const horairesList = [
             `${sessionData.start1}-${sessionData.end1}`,
@@ -106,15 +107,41 @@ const SurveillanceComponent = ({ sessionId }) => {
             `${sessionData.start3}-${sessionData.end3}`,
             `${sessionData.start4}-${sessionData.end4}`,
           ];
-          
+
           setHoraires(sortHoraires(horairesList));
         } catch (error) {
           showError('Erreur lors du chargement de la session');
         }
-      };
+    };
+
+    const loadJoursFeries = async () => {
+        try {
+            const data = await JourFerieService.getAllJoursFeries();
+            setJoursFeries(data);
+        } catch (error) {
+            console.error('Erreur lors du chargement des jours fériés:', error);
+        }
+    };
+
+    const isJourFerie = (date) => {
+        return joursFeries.some((jour) => jour.date.split('T')[0] === date);
+    };
+
+    const getJourFerieTitle = (date) => {
+        const jourFerie = joursFeries.find(
+            (jour) => jour.date.split('T')[0] === date
+        );
+        return jourFerie?.titre || '';
+    };
+
+    const getDayName = (dateStr) => {
+        const date = new Date(dateStr);
+        return format(date, 'EEEE', { locale: fr });
+    };
+
     const loadSurveillanceAssignments = async () => {
         if (!sessionId || !selectedDepartement) return;
-        
+
         try {
             setLoading(true);
             const assignments = await SurveillanceService.getSurveillanceAssignments(sessionId, selectedDepartement);
@@ -132,12 +159,17 @@ const SurveillanceComponent = ({ sessionId }) => {
             setLoading(false);
         }
     };
-    
+
     useEffect(() => {
         loadSurveillanceAssignments();
     }, [selectedDepartement, sessionId]);
 
     const handleCellClick = async (date, horaire, enseignantId) => {
+        const clickedDate = new Date(date);
+        if (clickedDate.getDay() === 0 || isJourFerie(date)) {
+            // Si c'est un dimanche ou un jour férié, ne rien faire
+            return;
+        }
         setLoadingCell({ date, horaire });
         setSelectedEnseignantId(enseignantId)
         console.log('Enseignant ID:', enseignantId); // Afficher l'ID de l'enseignant
@@ -152,7 +184,6 @@ const SurveillanceComponent = ({ sessionId }) => {
             setLoadingCell(null);
         }
     };
-    
 
     const showError = (message) => {
         toast.current?.show({ severity: 'error', summary: 'Erreur', detail: message, life: 3000 });
@@ -162,29 +193,31 @@ const SurveillanceComponent = ({ sessionId }) => {
         setShowDialog(false);
         setSelectedCell(null);
     };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const hours = date.getHours();
-    
+
         // Format the date in the "2024-11-24" format
         const formattedDate = date.toISOString().split('T')[0];
-        
+
         // Add "Matin" for morning times and "Apresmidi" for afternoon times
         const timeOfDay = hours < 12 ? "Matin" : "Apresmidi";
         const timeApremidi="Après-midi"
-        
+
         return `${timeOfDay}  ${formattedDate}  ${timeApremidi}`;
     };
+
     const headerGroup = useMemo(() => {
         if (!session || !horaires.length) return null;
-      
+
         const dates = [];
         let currentDate = new Date(session.dateDebut);
         const endDate = new Date(session.dateFin);
-      
+
         while (currentDate <= endDate) {
           const dateStr = currentDate.toISOString().split('T')[0];
-          
+
           // First add morning periods
           horaires
             .filter(horaire => {
@@ -205,7 +238,7 @@ const SurveillanceComponent = ({ sessionId }) => {
                 sortOrder: parseInt(horaire.split('-')[0].split(':')[0])
               });
             });
-      
+
           // Then add afternoon periods
           horaires
             .filter(horaire => {
@@ -226,10 +259,10 @@ const SurveillanceComponent = ({ sessionId }) => {
                 sortOrder: parseInt(horaire.split('-')[0].split(':')[0]) + 12 // Add 12 to ensure afternoon times sort after morning
               });
             });
-      
+
           currentDate.setDate(currentDate.getDate() + 1);
         }
-      
+
         return (
           <ColumnGroup>
             <Row>
@@ -239,10 +272,10 @@ const SurveillanceComponent = ({ sessionId }) => {
                 const periodesCount = dates.filter(
                   d => d.date === date && d.periode === periode
                 ).length;
-                
+
                 // Ne créer l'en-tête que pour la première occurrence de chaque période
-                if (index === 0 || 
-                    dates[index - 1].date !== date || 
+                if (index === 0 ||
+                    dates[index - 1].date !== date ||
                     dates[index - 1].periode !== periode) {
                   return (
                     <Column
@@ -268,34 +301,31 @@ const SurveillanceComponent = ({ sessionId }) => {
           </ColumnGroup>
         );
       }, [session, horaires]);
-      
-   
-    
 
-      const tableData = useMemo(() => {
+    const tableData = useMemo(() => {
         if (!session || !enseignants.length) return [];
-        
+
         const dates = [];
         let currentDate = new Date(session.dateDebut);
         const endDate = new Date(session.dateFin);
-      
+
         while (currentDate <= endDate) {
           dates.push(currentDate.toISOString().split('T')[0]);
           currentDate.setDate(currentDate.getDate() + 1);
         }
-      
+
         return enseignants.map(enseignant => {
-          const row = { 
+          const row = {
             enseignant: `${enseignant.nom} ${enseignant.prenom}`,
-            enseignantId: enseignant.id 
+            enseignantId: enseignant.id
           };
-          
+
           dates.forEach(date => {
             sortHoraires(horaires).forEach(horaire => {
               row[`${date}_${horaire}`] = { date, horaire };
             });
           });
-          
+
           return row;
         });
       }, [enseignants, session, horaires]);
@@ -305,13 +335,12 @@ const SurveillanceComponent = ({ sessionId }) => {
             console.error("Aucun examen sélectionné");
             return;
         }
-        
+
         // On stocke l'examen sélectionné
         setSelectedExam(exam);
         setAssignmentDialogVisible(true);
     };
-    
-    
+
     const handleAssignment = async (assignmentData) => {
         try {
             setLoading(true);
@@ -323,7 +352,7 @@ const SurveillanceComponent = ({ sessionId }) => {
                 detail: 'Surveillant assigné avec succès',
                 life: 3000,
             });
-    
+
             // Mettre à jour l'objet surveillanceAssignments localement
             const key = `${assignmentData.date}_${assignmentData.horaire}`;
             setSurveillanceAssignments(prev => ({
@@ -334,12 +363,12 @@ const SurveillanceComponent = ({ sessionId }) => {
                     enseignant: assignmentData.enseignant,
                 },
             }));
-    
+
             setRefreshKey(prev => prev + 1);
             setAssignmentDialogVisible(false);
-    
+
             if (state.selectedCell) {
-                
+
                 await handleCellClick(state.selectedCell.date, state.selectedCell.horaire,state.selectedCell);
             }
         } catch (error) {
@@ -353,181 +382,224 @@ const SurveillanceComponent = ({ sessionId }) => {
             setLoading(false);
         }
     };
+
     const [editDialogVisible, setEditDialogVisible] = useState(false);
-const [selectedAssignment, setSelectedAssignment] = useState(null);
+    const [selectedAssignment, setSelectedAssignment] = useState(null);
 
-const handleEditAssignment = (assignment) => {
-    setSelectedAssignment(assignment);
-    setEditDialogVisible(true);
-};
+    const handleEditAssignment = (assignment) => {
+        setSelectedAssignment(assignment);
+        setEditDialogVisible(true);
+    };
 
-const handleDeleteAssignment = (assignment) => {
-    if (!assignment) { // Retirez la vérification de l'ID
-        toast.current.show({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Assignation invalide',
-            life: 3000
-        });
-        return;
-    }
-
-    confirmDialog({
-        message: 'Êtes-vous sûr de vouloir supprimer cette assignation ?',
-        header: 'Confirmation de suppression',
-        icon: 'pi pi-exclamation-triangle',
-        acceptClassName: 'p-button-danger',
-        accept: async () => {
-            try {
-                setLoading(true);
-                await SurveillanceService.deleteSurveillanceAssignation(assignment.surveillanceId || assignment.id);
-                await loadSurveillanceAssignments();
-                
-                toast.current.show({
-                    severity: 'success',
-                    summary: 'Succès',
-                    detail: 'Assignation supprimée avec succès',
-                    life: 3000
-                });
-            } catch (error) {
-                toast.current.show({
-                    severity: 'error',
-                    summary: 'Erreur',
-                    detail: error.message || 'Erreur lors de la suppression',
-                    life: 5000
-                });
-            } finally {
-                setLoading(false);
-            }
+    const handleDeleteAssignment = (assignment) => {
+        if (!assignment) { // Retirez la vérification de l'ID
+            toast.current.show({
+                severity: 'error',
+                summary: 'Erreur',
+                detail: 'Assignation invalide',
+                life: 3000
+            });
+            return;
         }
-    });
-};
-const handleSaveEdit = async (updatedAssignment) => {
-    try {
-        console.log(updatedAssignment)
-       await SurveillanceService.updateSurveillanceAssignation(
+
+        confirmDialog({
+            message: 'Êtes-vous sûr de vouloir supprimer cette assignation ?',
+            header: 'Confirmation de suppression',
+            icon: 'pi pi-exclamation-triangle',
+            acceptClassName: 'p-button-danger',
+            accept: async () => {
+                try {
+                    setLoading(true);
+                    await SurveillanceService.deleteSurveillanceAssignation(assignment.surveillanceId || assignment.id);
+                    await loadSurveillanceAssignments();
+
+                    toast.current.show({
+                        severity: 'success',
+                        summary: 'Succès',
+                        detail: 'Assignation supprimée avec succès',
+                        life: 3000
+                    });
+                } catch (error) {
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Erreur',
+                        detail: error.message || 'Erreur lors de la suppression',
+                        life: 5000
+                    });
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
+    };
+
+    const handleSaveEdit = async (updatedAssignment) => {
+        try {
+            console.log(updatedAssignment)
+           await SurveillanceService.updateSurveillanceAssignation(
     updatedAssignment.id,
     updatedAssignment.local,
     updatedAssignment.typeSurveillant
 );
-        
-        await loadSurveillanceAssignments();
-        toast.current.show({
-            severity: 'success',
-            summary: 'Succès',
-            detail: 'Assignation mise à jour avec succès'
-        });
-        setEditDialogVisible(false);
-    } catch (error) {
-        toast.current.show({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors de la mise à jour '
-        });
-        console.log("error ",error)
-    }
-};
-const deleteAssignment = async (assignment) => {
-    try {
-        await SurveillanceService.deleteSurveillanceAssignation(assignment.id);
-        await loadSurveillanceAssignments();
-        toast.current.show({
-            severity: 'success',
-            summary: 'Succès',
-            detail: 'Assignation supprimée avec succès'
-        });
-    } catch (error) {
-        toast.current.show({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors de la suppression'
-        });
-    }
-};
-   
-const renderCellContent = (rowData, field) => {
-    if (!rowData[field] || !field) {
-        return null;
-    }
-    const date = rowData[field].date;
-    const horaire = rowData[field].horaire;
-    const enseignantId = rowData.enseignantId;
-    
-    if (!date || !horaire) {
-        return null;
-    }
-    const key = `${date}_${horaire}`;
-    const assignmentsList = surveillanceAssignments[key];
-    
-    if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
-        return <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
-    }
-    
-    const professorAssignments = assignmentsList?.filter(
-        assignment => assignment.enseignant === rowData.enseignant
-    );
-    
-    if (professorAssignments && professorAssignments.length > 0) {
-        return (
-            <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#e3f2fd' }}>
-                {professorAssignments.map((assignment, index) => (
-                    <div key={index} className="mb-2">
-                        <div className="flex flex-column">
-                            <div><strong>Local:</strong> {assignment.local}</div>
-                            <div><strong>Type:</strong> {assignment.typeSurveillant}</div>
-                            {!session?.confirmed && (
-                                <div className="flex justify-content-center gap-2 mt-2">
-                                    <Button
-                                        icon="pi pi-pencil"
-                                        className="p-button-rounded p-button-warning p-button-text"
-                                        onClick={() => handleEditAssignment(assignment)}
-                                        tooltip="Modifier"
-                                    />
-                                    <Button
-                                        icon="pi pi-trash"
-                                        className="p-button-rounded p-button-danger p-button-text"
-                                        onClick={() => handleDeleteAssignment(assignment)}
-                                        tooltip="Supprimer"
-                                        disabled={false}
-                                    />
-                                </div>
-                            )}
+
+            await loadSurveillanceAssignments();
+            toast.current.show({
+                severity: 'success',
+                summary: 'Succès',
+                detail: 'Assignation mise à jour avec succès'
+            });
+            setEditDialogVisible(false);
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Erreur',
+                detail: 'Erreur lors de la mise à jour '
+            });
+            console.log("error ",error)
+        }
+    };
+
+    const deleteAssignment = async (assignment) => {
+        try {
+            await SurveillanceService.deleteSurveillanceAssignation(assignment.id);
+            await loadSurveillanceAssignments();
+            toast.current.show({
+                severity: 'success',
+                summary: 'Succès',
+                detail: 'Assignation supprimée avec succès'
+            });
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Erreur',
+                detail: 'Erreur lors de la suppression'
+            });
+        }
+    };
+
+    const renderCellContent = (rowData, field) => {
+        if (!rowData[field] || !field) {
+            return null;
+        }
+        const date = rowData[field].date;
+        const horaire = rowData[field].horaire;
+        const enseignantId = rowData.enseignantId;
+
+        if (!date || !horaire) {
+            return null;
+        }
+        const key = `${date}_${horaire}`;
+        const assignmentsList = surveillanceAssignments[key];
+
+        const isHoliday = isJourFerie(date);
+        const dayName = getDayName(date);
+
+        if (new Date(date).getDay() === 0 || isHoliday) {
+            const reason = new Date(date).getDay() === 0
+                ? 'Dimanche'
+                : getJourFerieTitle(date);
+            return (
+                <div
+                    className="flex align-items-center justify-content-center"
+                    style={{
+                        minHeight: '3rem',
+                        backgroundColor: '#f0f0f0',
+                        cursor: 'not-allowed',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '4px',
+                        padding: '0.5rem',
+                    }}
+                >
+                    <div className="flex flex-column align-items-center gap-2">
+                        <div className="text-500 font-semibold">{dayName}</div>
+                        <i
+                            className={`pi ${
+                                new Date(date).getDay() === 0 ? 'pi-ban' : 'pi-calendar-times'
+                            } text-500`}
+                            style={{ fontSize: '1.2rem' }}
+                        />
+                        <div
+                            className="text-500 text-center"
+                            style={{ fontSize: '0.9rem' }}
+                        >
+                            Jour Bloqué
+                            <br />({reason})
                         </div>
                     </div>
-                ))}
-            </div>
+                </div>
+            );
+        }
+
+        if (state.loadingCell?.date === date && state.loadingCell?.horaire === horaire) {
+            return <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
+        }
+
+        const professorAssignments = assignmentsList?.filter(
+            assignment => assignment.enseignant === rowData.enseignant
         );
-    } else {
-        return !session?.confirmed ? (
-            <Button
-                label="Assigner"
-                className="p-button-text p-button-sm"
-                onClick={() => handleCellClick(date, horaire, enseignantId)}
-            />
-        ) : null;
-    }
-};
+
+        if (professorAssignments && professorAssignments.length > 0) {
+            return (
+                <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#e3f2fd' }}>
+                    {professorAssignments.map((assignment, index) => (
+                        <div key={index} className="mb-2">
+                            <div className="flex flex-column">
+                                <div><strong>Local:</strong> {assignment.local}</div>
+                                <div><strong>Type:</strong> {assignment.typeSurveillant}</div>
+                                {!session?.confirmed && (
+                                    <div className="flex justify-content-center gap-2 mt-2">
+                                        <Button
+                                            icon="pi pi-pencil"
+                                            className="p-button-rounded p-button-warning p-button-text"
+                                            onClick={() => handleEditAssignment(assignment)}
+                                            tooltip="Modifier"
+                                        />
+                                        <Button
+                                            icon="pi pi-trash"
+                                            className="p-button-rounded p-button-danger p-button-text"
+                                            onClick={() => handleDeleteAssignment(assignment)}
+                                            tooltip="Supprimer"
+                                            disabled={false}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        } else {
+            return !session?.confirmed ? (
+                <Button
+                    label="Assigner"
+                    className="p-button-text p-button-sm"
+                    onClick={() => handleCellClick(date, horaire, enseignantId)}
+                />
+            ) : null;
+        }
+    };
+
     const handleExportSurveillances = async () => {
         try {
             setLoading(true);
-    
+
             // Get surveillance data and assignments
             const surveillanceData = await SurveillanceService.getEmploiSurveillance(sessionId, selectedDepartement);
-    
+
             // Build the table headers and organize dates/time slots with proper sorting
             const headers = ["Enseignants"];
             const dateColumns = [];
-    
+
             // First, collect all unique dates
             const dates = new Set();
             surveillanceData.forEach((jour) => {
                 dates.add(jour.date);
             });
-    
+
             // For each date, organize morning then afternoon periods
             [...dates].sort().forEach(date => {
                 const periodsForDate = [];
-                
+
                 // Get all time slots for this date
                 surveillanceData
                     .filter(jour => jour.date === date)
@@ -542,7 +614,7 @@ const renderCellContent = (rowData, field) => {
                             });
                         });
                     });
-    
+
                 // Sort periods for this date
                 periodsForDate.sort((a, b) => {
                     // First sort by period (Matin comes before Après-midi)
@@ -552,40 +624,40 @@ const renderCellContent = (rowData, field) => {
                     // Then sort by start hour
                     return a.startHour - b.startHour;
                 });
-    
+
                 // Add sorted periods to dateColumns and headers
                 periodsForDate.forEach(period => {
                     dateColumns.push({
                         date: period.date,
                         horaire: period.horaire
                     });
-                    
+
                     const columnHeader = `${period.periode}\n${period.date}\n${period.horaire}`;
                     headers.push(columnHeader);
                 });
             });
-    
+
             // Prepare teachers data with assignments
             const enseignantsData = enseignants.map((enseignant) => {
                 const rowData = {
                     "Enseignants": `${enseignant.nom} ${enseignant.prenom}`
                 };
-    
+
                 // For each date/time column
                 dateColumns.forEach(({ date, horaire }) => {
                     const key = `${date}_${horaire}`;
                     const assignmentsList = surveillanceAssignments[key];
-                    
+
                     // Find assignment for current teacher
                     const teacherAssignment = assignmentsList?.find(
                         assignment => assignment.enseignant === `${enseignant.nom} ${enseignant.prenom}`
                     );
-    
+
                     // Build column key
                     const [startHour] = horaire.split("-").map((h) => parseInt(h.split(":")[0], 10));
                     const periode = startHour < 12 ? "Matin" : "Après-midi";
                     const columnKey = `${periode}\n${date}\n${horaire}`;
-    
+
                     // Set cell value based on assignment
                     if (teacherAssignment) {
                         rowData[columnKey] = `Local: ${teacherAssignment.local}\nType: ${teacherAssignment.typeSurveillant}`;
@@ -593,17 +665,17 @@ const renderCellContent = (rowData, field) => {
                         rowData[columnKey] = "Non assigné";
                     }
                 });
-    
+
                 return rowData;
             });
-    
+
             // Create and style Excel worksheet
             const ws = XLSX.utils.json_to_sheet(enseignantsData, { header: headers });
-            
+
             // Adjust column widths
             const colWidths = headers.map((_, idx) => ({ wch: idx === 0 ? 25 : 30 }));
             ws['!cols'] = colWidths;
-    
+
             // Apply cell styles
             const range = XLSX.utils.decode_range(ws['!ref']);
             for (let R = range.s.r; R <= range.e.r; R++) {
@@ -611,14 +683,14 @@ const renderCellContent = (rowData, field) => {
                     const cell_address = { c: C, r: R };
                     const cell_ref = XLSX.utils.encode_cell(cell_address);
                     if (!ws[cell_ref]) continue;
-    
+
                     ws[cell_ref].s = {
-                        alignment: { 
-                            vertical: 'center', 
-                            horizontal: 'center', 
-                            wrapText: true 
+                        alignment: {
+                            vertical: 'center',
+                            horizontal: 'center',
+                            wrapText: true
                         },
-                        font: { 
+                        font: {
                             bold: R === 0 || C === 0,
                             color: { rgb: R === 0 ? "FFFFFF" : "000000" }
                         },
@@ -634,14 +706,14 @@ const renderCellContent = (rowData, field) => {
                     };
                 }
             }
-    
+
             // Create and save Excel file
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Planning Surveillances");
-            
+
             const fileName = `Planning_Surveillances_${new Date().toISOString().split("T")[0]}.xlsx`;
             XLSX.writeFile(wb, fileName);
-    
+
             toast.current.show({
                 severity: "success",
                 summary: "Exportation réussie",
@@ -660,13 +732,14 @@ const renderCellContent = (rowData, field) => {
             setLoading(false);
         }
     };
+
     const handleExportPDF = async () => {
         try {
             setLoading(true);
-            
+
             // Récupérer les données de surveillance
             const surveillanceData = await SurveillanceService.getEmploiSurveillance(sessionId, selectedDepartement);
-            
+
             // Préparer les colonnes de dates comme dans l'export Excel
             const dateColumns = [];
             surveillanceData.forEach((jour) => {
@@ -674,28 +747,28 @@ const renderCellContent = (rowData, field) => {
                     dateColumns.push({ date: jour.date, horaire });
                 });
             });
-    
+
             // Préparer les données des enseignants comme dans l'export Excel
             const enseignantsData = enseignants.map((enseignant) => {
                 const rowData = {
                     "Enseignants": `${enseignant.nom} ${enseignant.prenom}`
                 };
-    
+
                 // Pour chaque date/horaire
                 dateColumns.forEach(({ date, horaire }) => {
                     const key = `${date}_${horaire}`;
                     const assignmentsList = surveillanceAssignments[key];
-                    
+
                     // Trouver l'assignation pour l'enseignant actuel
                     const teacherAssignment = assignmentsList?.find(
                         assignment => assignment.enseignant === `${enseignant.nom} ${enseignant.prenom}`
                     );
-    
+
                     // Construire la clé de colonne
                     const [startHour] = horaire.split("-").map((h) => parseInt(h.split(":")[0], 10));
                     const periode = startHour < 12 ? "Matin" : "Après-midi";
                     const columnKey = `${periode} ${date} ${horaire}`;
-    
+
                     // Définir la valeur de la cellule
                     if (teacherAssignment) {
                         rowData[columnKey] = `Local: ${teacherAssignment.local}\nType: ${teacherAssignment.typeSurveillant}`;
@@ -703,10 +776,10 @@ const renderCellContent = (rowData, field) => {
                         rowData[columnKey] = "Non assigné";
                     }
                 });
-    
+
                 return rowData;
             });
-    
+
             // Appeler la fonction d'exportation PDF avec les mêmes données que l'Excel
             await SurveillanceService.exporterSurveillancesPDF(
                 sessionId,
@@ -716,7 +789,7 @@ const renderCellContent = (rowData, field) => {
                 dateColumns,
                 toast.current
             );
-    
+
         } catch (error) {
             toast.current.show({
                 severity: 'error',
@@ -728,9 +801,8 @@ const renderCellContent = (rowData, field) => {
             setLoading(false);
         }
     };
-    
-      
-      const locauxTemplate = (rowData) => (
+
+    const locauxTemplate = (rowData) => (
         <div className="flex align-items-center">
             <i className="pi pi-building mr-2"></i>
             <span>
@@ -738,6 +810,7 @@ const renderCellContent = (rowData, field) => {
             </span>
         </div>
         );
+
     return (
         <div style={{
             backgroundImage: 'url(/ensajbg.png)',
@@ -771,16 +844,16 @@ const renderCellContent = (rowData, field) => {
         />
     </div>
     <div className="flex gap-2">
-                <Button 
-                    label="Exporter Excel" 
-                    icon="pi pi-file-excel" 
+                <Button
+                    label="Exporter Excel"
+                    icon="pi pi-file-excel"
                     onClick={handleExportSurveillances}
                     disabled={!selectedDepartement || loading}
                     className="p-button-success"
                 />
-                <Button 
-                    label="Exporter PDF" 
-                    icon="pi pi-file-pdf" 
+                <Button
+                    label="Exporter PDF"
+                    icon="pi pi-file-pdf"
                     onClick={handleExportPDF}
                     disabled={!selectedDepartement || loading}
                     className="p-button-danger"
@@ -893,15 +966,14 @@ const renderCellContent = (rowData, field) => {
                         )}
                         style={{ width: '8rem' }}
                     />
-                                                
-                           
-                        </DataTable>
+
+                            </DataTable>
                     </div>
                 ) : (
                     <Message severity="info" text="Aucun examen programmé" className="w-full" />
                 )}
             </Dialog>
-          
+
             <AssignmentDialog
   visible={assignmentDialogVisible}
   onHide={() => setAssignmentDialogVisible(false)}

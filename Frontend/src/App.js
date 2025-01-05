@@ -17,6 +17,7 @@ import DepartementEnseignantList from "./components/DepartementEnseignantList";
 import SessionDetails from "../src/pages/SessionDetails";
 import StudentSchedule from "./components/StudentSchedule";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import HolidayList from "./components/HolidayList";  // Ajout de l'import
 import VerifyCodePage from "./pages/VerifyCodePage";
 import ExamTable from "./pages/ExamTable";
 import { Sidebar, Menu, MenuItem, sidebarClasses } from "react-pro-sidebar";
@@ -52,59 +53,64 @@ function LayoutWithSidebar({ children }) {
 
   const navigationItems = [
     {
-      path: sessionId ? `/session/${sessionId}` : "/bonjour",
-      label: "Tableau de bord",
-      icon: "pi pi-home",
+      path: sessionId ? `/session/${sessionId}` : '/bonjour',
+      label: 'Tableau de bord',
+      icon: 'pi pi-home',
     },
     {
-      path: "/local",
-      label: "Gestion des Locaux",
-      icon: "pi pi-building",
+      path: '/local',
+      label: 'Gestion des Locaux',
+      icon: 'pi pi-building',
     },
     {
-      path: "/departements",
-      label: "Gestion des Départements",
-      icon: "pi pi-sitemap",
+      path: '/departements',
+      label: 'Gestion des Départements',
+      icon: 'pi pi-sitemap',
     },
     {
-      path: "/enseignant",
-      label: "Gestion des Enseignants",
-      icon: "pi pi-users",
+      path: '/enseignant',
+      label: 'Gestion des Enseignants',
+      icon: 'pi pi-users',
     },
     {
-      path: "/chatbot",
-      label: "Assistant Virtual",
-      icon: "pi pi-comments",
+      path: '/holidays', // Nouveau chemin
+      label: 'Jours Fériés',
+      icon: 'pi pi-calendar',
     },
     {
-      path: "/module",
-      label: "Modules",
-      icon: "pi pi-book",
+      path: '/chatbot',
+      label: 'Assistant Virtual',
+      icon: 'pi pi-comments',
     },
     {
-      path: "/option",
-      label: "Options",
-      icon: "pi pi-book",
+      path: '/module',
+      label: 'Modules',
+      icon: 'pi pi-book',
     },
     {
-      path: "/exam",
-      label: "Examens",
-      icon: "pi pi-copy",
+      path: '/option',
+      label: 'Options',
+      icon: 'pi pi-book',
     },
     {
-      path: "/surveillance",
-      label: "Surveillance des Examens",
-      icon: "pi pi-eye",
+      path: '/exam',
+      label: 'Examens',
+      icon: 'pi pi-copy',
     },
     {
-      path: "/student-schedule",
-      label: "Emploi des Étudiants",
-      icon: "pi pi-calendar-times",
+      path: '/surveillance',
+      label: 'Surveillance des Examens',
+      icon: 'pi pi-eye',
     },
     {
-      path: "/bonjour",
-      label: "Sessions",
-      icon: "pi pi-calendar",
+      path: '/student-schedule',
+      label: 'Emploi des Étudiants',
+      icon: 'pi pi-calendar-times',
+    },
+    {
+      path: '/bonjour',
+      label: 'Sessions',
+      icon: 'pi pi-calendar',
     },
   ];
 
@@ -339,6 +345,8 @@ function AppContent() {
             <Route path="/session/:id" element={<SessionDetails />} />
             <Route path="/enseignant" element={<EnseignantList />} />
             <Route path="/chatbot" element={<ChatBot />} />
+            <Route path="/holidays" element={<HolidayList />} />{' '}
+            {/* Nouvelle route */}
             <Route path="/local" element={<LocalList />} />
             <Route path="/module" element={<ModuleList />} />
             <Route path="/option" element={<OptionList />} />
