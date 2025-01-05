@@ -232,6 +232,7 @@ const ExamTable = ({ sessionId }) => {
    const dates = [];
    let currentDate = new Date(dateDebut);
 
+
    while (currentDate <= new Date(dateFin)) {
      dates.push({
        date: new Date(currentDate).toISOString().split('T')[0],
@@ -239,6 +240,8 @@ const ExamTable = ({ sessionId }) => {
      });
      currentDate.setDate(currentDate.getDate() + 1);
    }
+
+
 
    return dates;
  }, [session]);
@@ -356,7 +359,6 @@ const ExamTable = ({ sessionId }) => {
     }
   };
   const cellTemplate = (horaire) => (rowData) => {
-
     const isHoliday = isJourFerie(rowData.date);
     const dayName = getDayName(rowData.date);
 
@@ -364,6 +366,7 @@ const ExamTable = ({ sessionId }) => {
       const reason = rowData.isSunday
         ? 'Dimanche'
         : getJourFerieTitle(rowData.date);
+
       return (
         <div
           className="flex align-items-center justify-content-center"
@@ -447,9 +450,11 @@ const ExamTable = ({ sessionId }) => {
       <div
         className="cursor-pointer flex align-items-center justify-content-center gap-2"
         style={{
+
           minHeight: '3rem',
           transition: 'all 0.2s',
           borderRadius: '4px',
+
         }}
         onClick={() => handleCellClick(rowData.date, horaire)}
       >

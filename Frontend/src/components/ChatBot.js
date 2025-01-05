@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './ChatBot.css'; // Import du fichier CSS
-import Message from './Message';
-import { getMessageFromChat } from '../services/chatbootService';
+
+import Message from "./Message"
+import {getMessageFromChat} from "../services/chatbootService"
+
 
 const ChatBot = () => {
   const [messages, setMessages] = useState([
@@ -24,6 +26,7 @@ const ChatBot = () => {
   }, [messages]);
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
+
       const userMessage = {
         type: 'user',
         content: newMessage,
@@ -77,6 +80,7 @@ const ChatBot = () => {
     }
   };
 
+
   const formatTime = (date) => {
     return new Date(date).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
@@ -98,6 +102,7 @@ const ChatBot = () => {
         {/* Messages Container */}
         <div className="messages-container">
           {messages.map((msg, index) => (
+
             <Message
               key={index}
               content={msg.content}
