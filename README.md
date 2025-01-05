@@ -1,5 +1,5 @@
-# GestionSurveillance
-# ExamWatch - Système de Gestion de Surveillance des Examens
+# ExamMaster
+# ExamMaster : Gestion Intelligente et Complète des Examens
 
 ![Web App](https://github.com/user-attachments/assets/efdd943a-9973-4f99-a68b-351ca6be9e8b)
 
