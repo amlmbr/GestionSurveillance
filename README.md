@@ -15,7 +15,7 @@ Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et p
 
 ## Table des matières
 - [Objectifs](#objectifs)
-- [Architecture du projet](#Architecture du projet)
+- [Architecture du projet](#Architecture-du-projet)
 - [Fonctionnalités Principales](#fonctionnalités-principales)
   - [Gestion des Utilisateurs et Authentification](#gestion-des-utilisateurs-et-authentification)
   - [Gestion des Ressources](#gestion-des-ressources)
