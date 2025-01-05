@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './ChatBot.css'; // Import du fichier CSS
+
 import Message from "./Message"
 import {getMessageFromChat} from "../services/chatbootService"
+
 
 const ChatBot = () => {
   const [messages, setMessages] = useState([
@@ -24,54 +26,60 @@ const ChatBot = () => {
   }, [messages]);
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
-        const userMessage = {
-            type: 'user',
-            content: newMessage,
-            timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, userMessage]);
-        setNewMessage('');
 
-        const typingMessage = {
-            type: 'bot',
-            content: 'En train d\'écrire...',
-            timestamp: new Date(),
-            isTyping: true
-        };
-        setMessages((prev) => [...prev, typingMessage]);
+      const userMessage = {
+        type: 'user',
+        content: newMessage,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setNewMessage('');
 
-        try {
-            const response = await getMessageFromChat(newMessage);
-            
-            // Assurez-vous que le contenu est une chaîne de caractères
-            const formattedContent = String(response.response);
+      const typingMessage = {
+        type: 'bot',
+        content: "En train d'écrire...",
+        timestamp: new Date(),
+        isTyping: true,
+      };
+      setMessages((prev) => [...prev, typingMessage]);
 
-            setMessages((prev) => prev.map((msg, index) => {
-                if (index === prev.length - 1 && msg.isTyping) {
-                    return {
-                        type: 'bot',
-                        content: formattedContent,
-                        timestamp: new Date(),
-                        isTyping: false
-                    };
-                }
-                return msg;
-            }));
-        } catch (error) {
-            setMessages((prev) => prev.map((msg, index) => {
-                if (index === prev.length - 1 && msg.isTyping) {
-                    return {
-                        type: 'bot',
-                        content: 'Désolé, une erreur est survenue. Veuillez réessayer.',
-                        timestamp: new Date(),
-                        isTyping: false
-                    };
-                }
-                return msg;
-            }));
-        }
+      try {
+        const response = await getMessageFromChat(newMessage);
+
+        // Assurez-vous que le contenu est une chaîne de caractères
+        const formattedContent = String(response.response);
+
+        setMessages((prev) =>
+          prev.map((msg, index) => {
+            if (index === prev.length - 1 && msg.isTyping) {
+              return {
+                type: 'bot',
+                content: formattedContent,
+                timestamp: new Date(),
+                isTyping: false,
+              };
+            }
+            return msg;
+          })
+        );
+      } catch (error) {
+        setMessages((prev) =>
+          prev.map((msg, index) => {
+            if (index === prev.length - 1 && msg.isTyping) {
+              return {
+                type: 'bot',
+                content: 'Désolé, une erreur est survenue. Veuillez réessayer.',
+                timestamp: new Date(),
+                isTyping: false,
+              };
+            }
+            return msg;
+          })
+        );
+      }
     }
-};
+  };
+
 
   const formatTime = (date) => {
     return new Date(date).toLocaleTimeString('fr-FR', {
@@ -94,14 +102,15 @@ const ChatBot = () => {
         {/* Messages Container */}
         <div className="messages-container">
           {messages.map((msg, index) => (
-             <Message
-             key={index}
-             content={msg.content}
-             type={msg.type}
-             timestamp={msg.timestamp}
-           />
-         ))}
-         <div ref={messagesEndRef} />
+
+            <Message
+              key={index}
+              content={msg.content}
+              type={msg.type}
+              timestamp={msg.timestamp}
+            />
+          ))}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
