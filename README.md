@@ -1,6 +1,3 @@
-# GestionSurveillance
- Front Back end
-=======
 # ExamMaster
 # ExamMaster - Gestion Intelligente et Complète des Examens
 
@@ -18,25 +15,16 @@ ExamMaster est une application web complète, spécialement conçue pour gérer 
 
 ## Description
 ExamMaster est une application web complète, spécialement conçue pour gérer efficacement la surveillance et l’organisation des examens dans les établissements d’enseignement. Grâce à son interface intuitive et ses fonctionnalités avancées, elle simplifie les processus complexes liés à l’administration des examens, la gestion des surveillants, et le suivi des sessions en temps réel.
->>>>>>> eb718a59d277cffcc78704876978da6721a80fb1
 
 L’application permet aux administrateurs de planifier les examens en tenant compte des contraintes logistiques, telles que la disponibilité des locaux, des surveillants, et des créneaux horaires. Elle facilite également l’attribution des enseignants aux différents rôles et fournit des outils pour gérer les départements, les modules et les options des étudiants.
 
 L’une des forces majeures de ExamMaster est son assistant virtuel intégré. Cet outil interactif aide les utilisateurs à accéder rapidement aux informations nécessaires, comme les horaires des sessions, la liste des surveillants assignés ou la disponibilité des salles, offrant ainsi une expérience utilisateur fluide et conviviale.
 
-<<<<<<< HEAD
-En outre, ExamMaster inclut un tableau de bord en temps réel permettant de suivre l’état des sessions d’examens : présence des surveillants, occupation des locaux, et toute modification. 
-
-=======
->>>>>>> eb718a59d277cffcc78704876978da6721a80fb1
 Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et plus transparente, garantissant ainsi un déroulement optimal des sessions dans un cadre organisé et serein.
 
 ## Table des matières
 - [Objectifs](#objectifs)
-<<<<<<< HEAD
-=======
 - [Architecture du projet](#Architecture-du-projet)
->>>>>>> eb718a59d277cffcc78704876978da6721a80fb1
 - [Fonctionnalités Principales](#fonctionnalités-principales)
   - [Gestion des Utilisateurs et Authentification](#gestion-des-utilisateurs-et-authentification)
   - [Gestion des Ressources](#gestion-des-ressources)
@@ -65,13 +53,10 @@ Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et p
 - Assurer un suivi précis des sessions d'examens
 - Fournir des outils d'analyse et de reporting
 
-<<<<<<< HEAD
-=======
 ##Architecture du projet
 
 ![WhatsApp Image 2025-01-05 à 06 35 25_bbe5cfb5](https://github.com/user-attachments/assets/978a5675-f4b8-4c41-9f4a-d695cd8ae2ac)
 
->>>>>>> eb718a59d277cffcc78704876978da6721a80fb1
 ## Fonctionnalités Principales
 ### Gestion des Utilisateurs et Authentification
 - Authentification sécurisée avec JWT
@@ -87,10 +72,7 @@ Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et p
   - Modules
   - Enseignants
   - Étudiants
-<<<<<<< HEAD
-=======
   - Les jours fériés
->>>>>>> eb718a59d277cffcc78704876978da6721a80fb1
 
 ### Gestion des Examens
 - Planification des examens
@@ -115,11 +97,7 @@ Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et p
 
 ## Technologies Utilisées
 ### Backend
-<<<<<<< HEAD
-- Java 21
-=======
 - Java 17
->>>>>>> eb718a59d277cffcc78704876978da6721a80fb1
 - Spring Boot 3.4.0
 - Spring Security
 - Spring AI
@@ -196,13 +174,10 @@ Les variables suivantes doivent être configurées dans `application.properties`
 
 ## video demonstratifs
 
-<<<<<<< HEAD
-=======
 
 https://github.com/user-attachments/assets/78f341e8-25b4-49c1-a2a3-ffc58950a20c
 
 
->>>>>>> eb718a59d277cffcc78704876978da6721a80fb1
 ## Contribution
 
 <table>
@@ -230,11 +205,7 @@ https://github.com/user-attachments/assets/78f341e8-25b4-49c1-a2a3-ffc58950a20c
     </td>
     <td align="center">
        <p>Abderrahmane Bouleknadel </p>
-<<<<<<< HEAD
-      <a href="https://github.com/bouleknadel">
-=======
             <a href="https://github.com/bouleknadel">
->>>>>>> eb718a59d277cffcc78704876978da6721a80fb1
         <img src="https://github.com/bouleknadel.png" width="100px;" alt="Abderrahmane Bouleknadel"/><br />
         <sub><b>Abderrahmane Bouleknadel</b></sub>
       </a>
@@ -242,9 +213,6 @@ https://github.com/user-attachments/assets/78f341e8-25b4-49c1-a2a3-ffc58950a20c
   </tr>
 </table>
 
-<<<<<<< HEAD
-=======
 ## Encadrement
 
 Sous la supervision et le soutien précieux de M. Boutkhoum, cet effort collaboratif incarne une démarche innovante pour répondre aux défis organisationnels des établissements d’enseignement.
-
