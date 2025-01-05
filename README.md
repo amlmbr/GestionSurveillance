@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # GestionSurveillance
  Front Back end
 =======
@@ -248,4 +247,4 @@ https://github.com/user-attachments/assets/78f341e8-25b4-49c1-a2a3-ffc58950a20c
 ## Encadrement
 
 Sous la supervision et le soutien précieux de M. Boutkhoum, cet effort collaboratif incarne une démarche innovante pour répondre aux défis organisationnels des établissements d’enseignement.
->>>>>>> eb718a59d277cffcc78704876978da6721a80fb1
+
