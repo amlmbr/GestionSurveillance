@@ -63,6 +63,7 @@ Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et p
   - Modules
   - Enseignants
   - Étudiants
+  - Les jours fériés
 
 ### Gestion des Examens
 - Planification des examens
