@@ -8,6 +8,7 @@ ExamWatch est une application web complète conçue pour gérer efficacement la 
 
 ## Table des matières
 - [Objectifs](#objectifs)
+- [Architecture du projet](#Architecture du projet)
 - [Fonctionnalités Principales](#fonctionnalités-principales)
   - [Gestion des Utilisateurs et Authentification](#gestion-des-utilisateurs-et-authentification)
   - [Gestion des Ressources](#gestion-des-ressources)
@@ -35,6 +36,9 @@ ExamWatch est une application web complète conçue pour gérer efficacement la 
 - Assistant virtuel
 - Assurer un suivi précis des sessions d'examens
 - Fournir des outils d'analyse et de reporting
+
+##Architecture du projet
+
 
 ## Fonctionnalités Principales
 ### Gestion des Utilisateurs et Authentification
