@@ -44,8 +44,9 @@ Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et p
 - Fournir des outils d'analyse et de reporting
 
 ##Architecture du projet
+![diagram-export-02-01-2025-01_18_55](https://github.com/user-attachments/assets/7cac81dd-d298-486c-9728-d2a25edd4b7a)
 
-![WhatsApp Image 2025-01-05 à 06 35 25_bbe5cfb5](https://github.com/user-attachments/assets/978a5675-f4b8-4c41-9f4a-d695cd8ae2ac)
+
 
 ## Fonctionnalités Principales
 ### Gestion des Utilisateurs et Authentification
