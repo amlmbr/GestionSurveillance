@@ -1,13 +1,3 @@
-# ExamMaster
-# ExamMaster - Gestion Intelligente et Complète des Examens
-
-
-![Web App](https://github.com/user-attachments/assets/88442a14-6aab-4dd3-a380-fe9e4a7cf75c)
-
-
-## Description
-ExamMaster est une application web complète, spécialement conçue pour gérer efficacement la surveillance et l’organisation des examens dans les établissements d’enseignement. Grâce à son interface intuitive et ses fonctionnalités avancées, elle simplifie les processus complexes liés à l’administration des examens, la gestion des surveillants, et le suivi des sessions.
-=======
 # ExamMaster : Gestion Intelligente et Complète des Examens
 
 ![Web App](https://github.com/user-attachments/assets/efdd943a-9973-4f99-a68b-351ca6be9e8b)
