@@ -1,10 +1,17 @@
 # GestionSurveillance
 # ExamWatch - Système de Gestion de Surveillance des Examens
 
-![Gestion De Surveillance](https://github.com/user-attachments/assets/2cdd8aaa-af3d-4ce9-bdc9-0f665b895306)
+![Web App](https://github.com/user-attachments/assets/efdd943a-9973-4f99-a68b-351ca6be9e8b)
+
 
 ## Description
-ExamWatch est une application web complète conçue pour gérer efficacement la surveillance des examens dans les établissements d'enseignement. Elle offre une interface intuitive pour l'administration des examens, la gestion des surveillants, et le suivi des sessions d'examens en temps réel.
+ExamMaster est une application web complète, spécialement conçue pour gérer efficacement la surveillance et l’organisation des examens dans les établissements d’enseignement. Grâce à son interface intuitive et ses fonctionnalités avancées, elle simplifie les processus complexes liés à l’administration des examens, la gestion des surveillants, et le suivi des sessions en temps réel.
+
+L’application permet aux administrateurs de planifier les examens en tenant compte des contraintes logistiques, telles que la disponibilité des locaux, des surveillants, et des créneaux horaires. Elle facilite également l’attribution des enseignants aux différents rôles et fournit des outils pour gérer les départements, les modules et les options des étudiants.
+
+L’une des forces majeures de ExamMaster est son assistant virtuel intégré. Cet outil interactif aide les utilisateurs à accéder rapidement aux informations nécessaires, comme les horaires des sessions, la liste des surveillants assignés ou la disponibilité des salles, offrant ainsi une expérience utilisateur fluide et conviviale.
+
+Avec ExamMaster, la gestion des examens devient plus simple, plus efficace, et plus transparente, garantissant ainsi un déroulement optimal des sessions dans un cadre organisé et serein.
 
 ## Table des matières
 - [Objectifs](#objectifs)
@@ -39,6 +46,7 @@ ExamWatch est une application web complète conçue pour gérer efficacement la 
 
 ##Architecture du projet
 
+![WhatsApp Image 2025-01-05 à 06 35 25_bbe5cfb5](https://github.com/user-attachments/assets/978a5675-f4b8-4c41-9f4a-d695cd8ae2ac)
 
 ## Fonctionnalités Principales
 ### Gestion des Utilisateurs et Authentification
@@ -156,6 +164,10 @@ Les variables suivantes doivent être configurées dans `application.properties`
 
 ## video demonstratifs
 
+
+https://github.com/user-attachments/assets/78f341e8-25b4-49c1-a2a3-ffc58950a20c
+
+
 ## Contribution
 
 <table>
@@ -190,3 +202,7 @@ Les variables suivantes doivent être configurées dans `application.properties`
     </td>
   </tr>
 </table>
+
+## Encadrement
+
+Sous la supervision et le soutien précieux de M. Boutkhoum, cet effort collaboratif incarne une démarche innovante pour répondre aux défis organisationnels des établissements d’enseignement.
